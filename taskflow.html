@@ -161,11 +161,11 @@ body {
   cursor: pointer; text-align: center; user-select: none;
 }
 .opt-btn.on-daily  { border-color: rgba(124,75,150,0.4); background: var(--daily-light); color: var(--daily); }
-.opt-btn.on-snooze { border-color: rgba(44,95,138,0.4);  background: var(--blue-light);  color: var(--blue); }
+.opt-btn.on-Schedule { border-color: rgba(44,95,138,0.4);  background: var(--blue-light);  color: var(--blue); }
 
-.snooze-date-row { margin-top: 7px; display: none; }
-.snooze-date-row.show { display: block; }
-.snooze-date-input {
+.Schedule-date-row { margin-top: 7px; display: none; }
+.Schedule-date-row.show { display: block; }
+.Schedule-date-input {
   width: 100%; background: var(--bg2); border: 1.5px solid var(--blue);
   border-radius: var(--radius-sm); padding: 9px 13px;
   font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
@@ -211,7 +211,7 @@ body {
 .pill { font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
 .pill-daily   { color: var(--daily); border-color: rgba(124,75,150,0.25); background: var(--daily-light); }
 .pill-rolled  { color: var(--gold);  border-color: rgba(184,134,11,0.25);  background: var(--gold-light); }
-.pill-snoozed { color: var(--blue);  border-color: rgba(44,95,138,0.25);   background: var(--blue-light); }
+.pill-Scheduled { color: var(--blue);  border-color: rgba(44,95,138,0.25);   background: var(--blue-light); }
 .pill-date    { color: var(--text3); border-color: var(--border);          background: var(--bg2); }
 
 .task-actions { display: flex; gap: 6px; margin-top: 8px; }
@@ -222,7 +222,7 @@ body {
 }
 .act-btn.danger { color: var(--red); border-color: rgba(192,57,43,0.2); background: var(--red-light); }
 .act-btn.restore { color: var(--accent); border-color: rgba(45,90,61,0.2); background: var(--accent-light); }
-.act-btn.snooze { color: var(--blue); border-color: rgba(44,95,138,0.2); background: var(--blue-light); }
+.act-btn.Schedule { color: var(--blue); border-color: rgba(44,95,138,0.2); background: var(--blue-light); }
 
 /* ── Rollover banner ── */
 .rollover-banner {
@@ -368,25 +368,25 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
     </div>
     <div class="add-options">
       <button class="opt-btn" id="btnDaily"  onclick="toggleOpt('daily')">⟳ Recurring</button>
-      <button class="opt-btn" id="btnSnooze" onclick="toggleOpt('snooze')">💤 Snooze</button>
+      <button class="opt-btn" id="btnSchedule" onclick="toggleOpt('Schedule')">📅 Schedule</button>
     </div>
-    <div class="snooze-date-row" id="snoozeDateRow">
-      <input type="date" class="snooze-date-input" id="snoozeDateAdd" />
+    <div class="Schedule-date-row" id="ScheduleDateRow">
+      <input type="date" class="Schedule-date-input" id="ScheduleDateAdd" />
     </div>
   </div>
 </div>
 
-<!-- Snooze Sheet -->
-<div class="overlay" id="shSnooze">
+<!-- Schedule Sheet -->
+<div class="overlay" id="shSchedule">
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-inner">
-      <div class="sheet-title">Snooze task</div>
+      <div class="sheet-title">Schedule task</div>
       <label class="field-label">Defer to date</label>
-      <input type="date" class="field-input" id="snoozeDate" />
+      <input type="date" class="field-input" id="ScheduleDate" />
       <div class="sh-actions">
-        <button class="sh-btn sh-ghost"   onclick="closeSheet('shSnooze')">Cancel</button>
-        <button class="sh-btn sh-primary" onclick="confirmSnooze()">Snooze</button>
+        <button class="sh-btn sh-ghost"   onclick="closeSheet('shSchedule')">Cancel</button>
+        <button class="sh-btn sh-primary" onclick="confirmSchedule()">Schedule</button>
       </div>
     </div>
   </div>
@@ -424,7 +424,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
         <strong>How rollover works</strong>
         Incomplete tasks move to today each morning.
         Recurring tasks reset fresh daily.
-        Snoozed tasks return on their chosen date.
+        Scheduled tasks return on their chosen date.
       </div>
       <div class="sh-actions">
         <button class="sh-btn sh-ghost" style="width:100%;" onclick="closeSheet('shSettings')">Close</button>
@@ -437,7 +437,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
 const TODAY = new Date().toISOString().split('T')[0];
 let CFG = { url: '', key: '' };
 let S   = { tasks: [], templates: [], lastRollover: null };
-let UI  = { tab: 'today', optDaily: false, optSnooze: false, snoozeTaskId: null };
+let UI  = { tab: 'today', optDaily: false, optSchedule: false, ScheduleTaskId: null };
 const expanded = new Set();
 
 function loadConfig() {
@@ -535,7 +535,7 @@ function rollover() {
 }
 
 function makeTask(title, isDaily=false, date=TODAY) {
-  return { id: uid(), title, date, done:false, isDaily, rolledOver:false, snoozedTo:null, createdAt:new Date().toISOString() };
+  return { id: uid(), title, date, done:false, isDaily, rolledOver:false, ScheduledTo:null, createdAt:new Date().toISOString() };
 }
 
 function addTask() {
@@ -543,9 +543,9 @@ function addTask() {
   const title = input.value.trim();
   if (!title) return;
   let date = TODAY;
-  if (UI.optSnooze) date = document.getElementById('snoozeDateAdd').value || TODAY;
+  if (UI.optSchedule) date = document.getElementById('ScheduleDateAdd').value || TODAY;
   const task = makeTask(title, UI.optDaily, date);
-  if (UI.optSnooze && date !== TODAY) task.snoozedTo = date;
+  if (UI.optSchedule && date !== TODAY) task.ScheduledTo = date;
   if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title });
   S.tasks.unshift(task);
   input.value = '';
@@ -562,19 +562,19 @@ function deleteTask(id) {
   autosave(); render();
 }
 
-function openSnoozeSheet(id) {
-  UI.snoozeTaskId = id;
+function openScheduleSheet(id) {
+  UI.ScheduleTaskId = id;
   const tom = new Date(); tom.setDate(tom.getDate()+1);
-  document.getElementById('snoozeDate').value = tom.toISOString().split('T')[0];
-  openSheet('shSnooze');
+  document.getElementById('ScheduleDate').value = tom.toISOString().split('T')[0];
+  openSheet('shSchedule');
 }
 
-function confirmSnooze() {
-  const date = document.getElementById('snoozeDate').value;
-  if (!date || !UI.snoozeTaskId) return;
-  const t = S.tasks.find(x => x.id === UI.snoozeTaskId);
-  if (t) { t.date = date; t.snoozedTo = date; t.done = false; t.rolledOver = false; }
-  autosave(); render(); closeSheet('shSnooze');
+function confirmSchedule() {
+  const date = document.getElementById('ScheduleDate').value;
+  if (!date || !UI.ScheduleTaskId) return;
+  const t = S.tasks.find(x => x.id === UI.ScheduleTaskId);
+  if (t) { t.date = date; t.ScheduledTo = date; t.done = false; t.rolledOver = false; }
+  autosave(); render(); closeSheet('shSchedule');
 }
 
 function addTemplate() {
@@ -600,15 +600,15 @@ function setTab(tab) {
 
 function toggleOpt(type) {
   if (type === 'daily') {
-    UI.optDaily = !UI.optDaily; UI.optSnooze = false;
+    UI.optDaily = !UI.optDaily; UI.optSchedule = false;
     document.getElementById('btnDaily').classList.toggle('on-daily', UI.optDaily);
-    document.getElementById('btnSnooze').classList.remove('on-snooze');
-    document.getElementById('snoozeDateRow').classList.remove('show');
+    document.getElementById('btnSchedule').classList.remove('on-Schedule');
+    document.getElementById('ScheduleDateRow').classList.remove('show');
   } else {
-    UI.optSnooze = !UI.optSnooze; UI.optDaily = false;
-    document.getElementById('btnSnooze').classList.toggle('on-snooze', UI.optSnooze);
+    UI.optSchedule = !UI.optSchedule; UI.optDaily = false;
+    document.getElementById('btnSchedule').classList.toggle('on-Schedule', UI.optSchedule);
     document.getElementById('btnDaily').classList.remove('on-daily');
-    document.getElementById('snoozeDateRow').classList.toggle('show', UI.optSnooze);
+    document.getElementById('ScheduleDateRow').classList.toggle('show', UI.optSchedule);
   }
 }
 
@@ -645,7 +645,7 @@ function renderTaskList() {
   document.getElementById('tab-done').innerHTML = 'Done' + (doneCount ? `<span class="tab-badge" style="background:var(--accent);">${doneCount}</span>` : '');
 
   if (!tasks.length) {
-    const [icon, msg] = tab==='today' ? ['🌿','Nothing on the list.<br>Add a task below.'] : tab==='upcoming' ? ['💤','No upcoming tasks.<br>Snooze something to defer it.'] : ['✓','Nothing completed yet.'];
+    const [icon, msg] = tab==='today' ? ['🌿','Nothing on the list.<br>Add a task below.'] : tab==='upcoming' ? ['📅','No upcoming tasks.<br>Schedule something to defer it.'] : ['✓','Nothing completed yet.'];
     el.innerHTML = `<div class="empty"><span class="empty-emoji">${icon}</span>${msg}</div>`;
     return;
   }
@@ -674,13 +674,13 @@ function card(t) {
   const pills = [];
   if (t.isDaily)    pills.push('<span class="pill pill-daily">⟳ recurring</span>');
   if (t.rolledOver) pills.push('<span class="pill pill-rolled">↑ carried</span>');
-  if (t.snoozedTo)  pills.push(`<span class="pill pill-snoozed">💤 ${fmtDate(t.snoozedTo)}</span>`);
+  if (t.ScheduledTo)  pills.push(`<span class="pill pill-Scheduled">📅 ${fmtDate(t.ScheduledTo)}</span>`);
   if (UI.tab !== 'today' && t.date) pills.push(`<span class="pill pill-date">${fmtDate(t.date)}</span>`);
   if (t.done && t.completedAt) pills.push(`<span class="pill pill-date">✓ ${fmtDate(t.completedAt.split('T')[0])}</span>`);
 
   const actions = isExp ? `<div class="task-actions" onclick="event.stopPropagation()">
     ${t.done ? `<button class="act-btn restore" onclick="toggleDone('${t.id}')">↩ Restore</button>` : ''}
-    ${!t.done && !t.isDaily ? `<button class="act-btn snooze" onclick="openSnoozeSheet('${t.id}')">💤 Snooze</button>` : ''}
+    ${!t.done && !t.isDaily ? `<button class="act-btn Schedule" onclick="openScheduleSheet('${t.id}')">📅 Schedule</button>` : ''}
     <button class="act-btn danger" onclick="deleteTask('${t.id}')">Delete</button>
   </div>` : '';
 
@@ -717,7 +717,7 @@ async function startApp() {
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('todayLabel').textContent = new Date(TODAY+'T12:00:00').toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const tom = new Date(); tom.setDate(tom.getDate()+1);
-  document.getElementById('snoozeDateAdd').value = tom.toISOString().split('T')[0];
+  document.getElementById('ScheduleDateAdd').value = tom.toISOString().split('T')[0];
   document.getElementById('addInput').addEventListener('keydown', e => { if(e.key==='Enter') addTask(); });
   document.getElementById('tmplInput').addEventListener('keydown', e => { if(e.key==='Enter') addTemplate(); });
   await syncNow();

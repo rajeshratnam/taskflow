@@ -434,7 +434,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
 </div>
 
 <script>
-const TODAY = new Date().toISOString().split('T')[0];
+const d = new Date(); const TODAY = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let CFG = { url: '', key: '' };
 let S   = { tasks: [], templates: [], lastRollover: null };
 let UI  = { tab: 'today', optDaily: false, optSchedule: false, ScheduleTaskId: null };

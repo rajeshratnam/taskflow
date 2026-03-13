@@ -348,6 +348,31 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
 .add-tmpl-row { display: flex; gap: 8px; margin-top: 8px; }
 
 
+
+/* ── Add bar extras ── */
+.add-section-label {
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text3); margin: 8px 0 5px;
+}
+.cat-selector {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.cat-chip {
+  padding: 5px 9px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none; transition: all 0.15s;
+  white-space: nowrap;
+}
+.cat-chip.sel-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.cat-chip.sel-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.cat-chip.sel-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.cat-chip.sel-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.cat-chip.sel-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.cat-chip.sel-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+.cat-chip.sel-none     { background: var(--text); color: white; border-color: var(--text); }
+
 /* ── Recurrence selector ── */
 .recur-selector {
   display: flex; gap: 6px; margin-top: 7px; display: none;
@@ -458,14 +483,38 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
   <div class="scroll-area" id="taskList"></div>
 
   <div class="add-bar">
+    <!-- Input row -->
     <div class="add-row">
       <input class="add-input" id="addInput" placeholder="What needs doing..." autocorrect="off" />
       <button class="add-submit" onclick="addTask()">+</button>
     </div>
-    <div class="add-options">
-      <button class="opt-btn" id="btnDaily"  onclick="toggleOpt('daily')">⟳ Recurring</button>
+
+    <!-- Category row — always visible -->
+    <div class="add-section-label">Category</div>
+    <div class="cat-selector">
+      <div class="cat-chip" id="cchip-none"     onclick="selectCat('')">—</div>
+      <div class="cat-chip" id="cchip-work"     onclick="selectCat('work')">💼 Work</div>
+      <div class="cat-chip" id="cchip-personal" onclick="selectCat('personal')">👤 Personal</div>
+      <div class="cat-chip" id="cchip-health"   onclick="selectCat('health')">💪 Health</div>
+      <div class="cat-chip" id="cchip-home"     onclick="selectCat('home')">🏠 Home</div>
+      <div class="cat-chip" id="cchip-learning" onclick="selectCat('learning')">📚 Learning</div>
+      <div class="cat-chip" id="cchip-finance"  onclick="selectCat('finance')">💰 Finance</div>
+    </div>
+
+    <!-- Options row -->
+    <div class="add-options" style="margin-top:7px;">
+      <button class="opt-btn" id="btnDaily"    onclick="toggleOpt('daily')">⟳ Recurring</button>
       <button class="opt-btn" id="btnSchedule" onclick="toggleOpt('schedule')">📅 Schedule</button>
     </div>
+
+    <!-- Recurrence type — shown when Recurring is active -->
+    <div class="recur-selector" id="recurSelector">
+      <div class="recur-chip active" id="rchip-daily"    onclick="selectRecur('daily')">Every day</div>
+      <div class="recur-chip"        id="rchip-weekdays" onclick="selectRecur('weekdays')">Weekdays</div>
+      <div class="recur-chip"        id="rchip-weekends" onclick="selectRecur('weekends')">Weekends</div>
+    </div>
+
+    <!-- Schedule date — shown when Schedule is active -->
     <div class="schedule-date-row" id="scheduleDateRow">
       <input type="date" class="schedule-date-input" id="scheduleDateAdd" />
     </div>
@@ -650,6 +699,8 @@ function addTask() {
   if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType });
   S.tasks.unshift(task);
   input.value = '';
+  UI.selectedCat = '';
+  selectCat('');
   autosave(); render();
 }
 
@@ -730,17 +781,15 @@ function setFilter(cat) {
 
 function selectCat(cat) {
   UI.selectedCat = cat;
-  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
+  document.querySelectorAll('.cat-chip').forEach(c => {
+    c.className = 'cat-chip';
+  });
   if (cat) {
     const chip = document.getElementById('cchip-' + cat);
     if (chip) chip.classList.add('sel-' + cat);
   } else {
-    document.getElementById('cchip-none').style.background = 'var(--text)';
-    document.getElementById('cchip-none').style.color = 'white';
-    setTimeout(() => {
-      document.getElementById('cchip-none').style.background = '';
-      document.getElementById('cchip-none').style.color = '';
-    }, 300);
+    const chip = document.getElementById('cchip-none');
+    if (chip) chip.classList.add('sel-none');
   }
 }
 

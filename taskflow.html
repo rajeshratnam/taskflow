@@ -29,6 +29,18 @@
   --blue-light: #e8f0f7;
   --gold: #b8860b;
   --gold-light: #fdf6e3;
+  --cat-work:     #2c5f8a;
+  --cat-personal: #2d5a3d;
+  --cat-health:   #c0392b;
+  --cat-home:     #b8860b;
+  --cat-learning: #7c4b96;
+  --cat-finance:  #1a7a6e;
+  --cat-work-light:     #e8f0f7;
+  --cat-personal-light: #e8f0ea;
+  --cat-health-light:   #fdecea;
+  --cat-home-light:     #fdf6e3;
+  --cat-learning-light: #f0eaf5;
+  --cat-finance-light:  #e6f5f3;
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 1px 4px rgba(0,0,0,0.07);
@@ -161,16 +173,50 @@ body {
   cursor: pointer; text-align: center; user-select: none;
 }
 .opt-btn.on-daily  { border-color: rgba(124,75,150,0.4); background: var(--daily-light); color: var(--daily); }
-.opt-btn.on-Schedule { border-color: rgba(44,95,138,0.4);  background: var(--blue-light);  color: var(--blue); }
+.opt-btn.on-schedule { border-color: rgba(44,95,138,0.4);  background: var(--blue-light);  color: var(--blue); }
 
-.Schedule-date-row { margin-top: 7px; display: none; }
-.Schedule-date-row.show { display: block; }
-.Schedule-date-input {
+.schedule-date-row { margin-top: 7px; display: none; }
+.schedule-date-row.show { display: block; }
+.schedule-date-input {
   width: 100%; background: var(--bg2); border: 1.5px solid var(--blue);
   border-radius: var(--radius-sm); padding: 9px 13px;
   font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
   outline: none; -webkit-appearance: none;
 }
+
+
+/* ── Filter bar ── */
+.filter-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.filter-chip.active-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.filter-chip.active-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.filter-chip.active-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.filter-chip.active-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.filter-chip.active-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.filter-chip.active-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+.filter-chip.active-all      { background: var(--text); color: white; border-color: var(--text); }
 
 /* ── Sections ── */
 .section-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
@@ -211,8 +257,15 @@ body {
 .pill { font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
 .pill-daily   { color: var(--daily); border-color: rgba(124,75,150,0.25); background: var(--daily-light); }
 .pill-rolled  { color: var(--gold);  border-color: rgba(184,134,11,0.25);  background: var(--gold-light); }
-.pill-Scheduled { color: var(--blue);  border-color: rgba(44,95,138,0.25);   background: var(--blue-light); }
+.pill-snoozed { color: var(--blue);  border-color: rgba(44,95,138,0.25);   background: var(--blue-light); }
 .pill-date    { color: var(--text3); border-color: var(--border);          background: var(--bg2); }
+
+.pill-work     { color: var(--cat-work);     border-color: rgba(44,95,138,0.3);   background: var(--cat-work-light); }
+.pill-personal { color: var(--cat-personal); border-color: rgba(45,90,61,0.3);    background: var(--cat-personal-light); }
+.pill-health   { color: var(--cat-health);   border-color: rgba(192,57,43,0.3);   background: var(--cat-health-light); }
+.pill-home     { color: var(--cat-home);     border-color: rgba(184,134,11,0.3);  background: var(--cat-home-light); }
+.pill-learning { color: var(--cat-learning); border-color: rgba(124,75,150,0.3);  background: var(--cat-learning-light); }
+.pill-finance  { color: var(--cat-finance);  border-color: rgba(26,122,110,0.3);  background: var(--cat-finance-light); }
 
 .task-actions { display: flex; gap: 6px; margin-top: 8px; }
 .act-btn {
@@ -222,7 +275,7 @@ body {
 }
 .act-btn.danger { color: var(--red); border-color: rgba(192,57,43,0.2); background: var(--red-light); }
 .act-btn.restore { color: var(--accent); border-color: rgba(45,90,61,0.2); background: var(--accent-light); }
-.act-btn.Schedule { color: var(--blue); border-color: rgba(44,95,138,0.2); background: var(--blue-light); }
+.act-btn.schedule-btn { color: var(--blue); border-color: rgba(44,95,138,0.2); background: var(--blue-light); }
 
 /* ── Rollover banner ── */
 .rollover-banner {
@@ -294,6 +347,39 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
 
 .add-tmpl-row { display: flex; gap: 8px; margin-top: 8px; }
 
+
+/* ── Recurrence selector ── */
+.recur-selector {
+  display: flex; gap: 6px; margin-top: 7px; display: none;
+}
+.recur-selector.show { display: flex; }
+.recur-chip {
+  flex: 1; padding: 6px 4px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text2); letter-spacing: 0.03em;
+  cursor: pointer; user-select: none; text-align: center; transition: all 0.15s;
+}
+.recur-chip.active { background: var(--daily-light); color: var(--daily); border-color: rgba(124,75,150,0.4); }
+
+/* ── Category selector ── */
+.cat-selector {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px;
+}
+.cat-chip {
+  padding: 5px 10px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none; transition: all 0.15s;
+}
+.cat-chip.sel-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.cat-chip.sel-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.cat-chip.sel-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.cat-chip.sel-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.cat-chip.sel-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.cat-chip.sel-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+
 /* ── Onboarding ── */
 .onboard-overlay {
   position: fixed; inset: 0; background: var(--bg); z-index: 300;
@@ -359,6 +445,16 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
     <div class="tab"        id="tab-done"     onclick="setTab('done')">Done</div>
   </div>
 
+
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-chip active-all" id="chip-all" onclick="setFilter('all')">All</div>
+    <div class="filter-chip" id="chip-work"     onclick="setFilter('work')">💼 Work</div>
+    <div class="filter-chip" id="chip-personal" onclick="setFilter('personal')">👤 Personal</div>
+    <div class="filter-chip" id="chip-health"   onclick="setFilter('health')">💪 Health</div>
+    <div class="filter-chip" id="chip-home"     onclick="setFilter('home')">🏠 Home</div>
+    <div class="filter-chip" id="chip-learning" onclick="setFilter('learning')">📚 Learning</div>
+    <div class="filter-chip" id="chip-finance"  onclick="setFilter('finance')">💰 Finance</div>
+  </div>
   <div class="scroll-area" id="taskList"></div>
 
   <div class="add-bar">
@@ -368,10 +464,10 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
     </div>
     <div class="add-options">
       <button class="opt-btn" id="btnDaily"  onclick="toggleOpt('daily')">⟳ Recurring</button>
-      <button class="opt-btn" id="btnSchedule" onclick="toggleOpt('Schedule')">📅 Schedule</button>
+      <button class="opt-btn" id="btnSchedule" onclick="toggleOpt('schedule')">📅 Schedule</button>
     </div>
-    <div class="Schedule-date-row" id="ScheduleDateRow">
-      <input type="date" class="Schedule-date-input" id="ScheduleDateAdd" />
+    <div class="schedule-date-row" id="scheduleDateRow">
+      <input type="date" class="schedule-date-input" id="scheduleDateAdd" />
     </div>
   </div>
 </div>
@@ -383,10 +479,10 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
     <div class="sheet-inner">
       <div class="sheet-title">Schedule task</div>
       <label class="field-label">Defer to date</label>
-      <input type="date" class="field-input" id="ScheduleDate" />
+      <input type="date" class="field-input" id="snoozeDate" />
       <div class="sh-actions">
         <button class="sh-btn sh-ghost"   onclick="closeSheet('shSchedule')">Cancel</button>
-        <button class="sh-btn sh-primary" onclick="confirmSchedule()">Schedule</button>
+        <button class="sh-btn sh-primary" onclick="confirmSnooze()">Schedule</button>
       </div>
     </div>
   </div>
@@ -424,7 +520,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
         <strong>How rollover works</strong>
         Incomplete tasks move to today each morning.
         Recurring tasks reset fresh daily.
-        Scheduled tasks return on their chosen date.
+        Scheduled tasks appear on their chosen date.
       </div>
       <div class="sh-actions">
         <button class="sh-btn sh-ghost" style="width:100%;" onclick="closeSheet('shSettings')">Close</button>
@@ -437,7 +533,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
 const d = new Date(); const TODAY = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let CFG = { url: '', key: '' };
 let S   = { tasks: [], templates: [], lastRollover: null };
-let UI  = { tab: 'today', optDaily: false, optSchedule: false, ScheduleTaskId: null };
+let UI  = { tab: 'today', optDaily: false, optSchedule: false, snoozeTaskId: null, filter: 'all', selectedCat: '', recurType: 'daily' };
 const expanded = new Set();
 
 function loadConfig() {
@@ -529,13 +625,17 @@ function rollover() {
   S.tasks = S.tasks.filter(t => !(t.isDaily && t.date < TODAY));
   const existingDaily = S.tasks.filter(t => t.isDaily && t.date === TODAY).map(t => t.title);
   S.templates.forEach(tmpl => {
-    if (!existingDaily.includes(tmpl.title)) S.tasks.push(makeTask(tmpl.title, true));
+    if (!existingDaily.includes(tmpl.title) && shouldShowToday(tmpl)) {
+      const t = makeTask(tmpl.title, true);
+      t.recurType = tmpl.recurType || 'daily';
+      S.tasks.push(t);
+    }
   });
   S.lastRollover = TODAY;
 }
 
 function makeTask(title, isDaily=false, date=TODAY) {
-  return { id: uid(), title, date, done:false, isDaily, rolledOver:false, ScheduledTo:null, createdAt:new Date().toISOString() };
+  return { id: uid(), title, date, done:false, isDaily, rolledOver:false, snoozedTo:null, createdAt:new Date().toISOString() };
 }
 
 function addTask() {
@@ -543,10 +643,11 @@ function addTask() {
   const title = input.value.trim();
   if (!title) return;
   let date = TODAY;
-  if (UI.optSchedule) date = document.getElementById('ScheduleDateAdd').value || TODAY;
+  if (UI.optSchedule) date = document.getElementById('scheduleDateAdd').value || TODAY;
   const task = makeTask(title, UI.optDaily, date);
-  if (UI.optSchedule && date !== TODAY) task.ScheduledTo = date;
-  if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title });
+  if (UI.selectedCat) task.category = UI.selectedCat;
+  if (UI.optSchedule && date !== TODAY) task.snoozedTo = date;
+  if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType });
   S.tasks.unshift(task);
   input.value = '';
   autosave(); render();
@@ -562,18 +663,18 @@ function deleteTask(id) {
   autosave(); render();
 }
 
-function openScheduleSheet(id) {
-  UI.ScheduleTaskId = id;
+function openSnoozeSheet(id) {
+  UI.snoozeTaskId = id;
   const tom = new Date(); tom.setDate(tom.getDate()+1);
-  document.getElementById('ScheduleDate').value = tom.toISOString().split('T')[0];
+  document.getElementById('snoozeDate').value = tom.toISOString().split('T')[0];
   openSheet('shSchedule');
 }
 
-function confirmSchedule() {
-  const date = document.getElementById('ScheduleDate').value;
-  if (!date || !UI.ScheduleTaskId) return;
-  const t = S.tasks.find(x => x.id === UI.ScheduleTaskId);
-  if (t) { t.date = date; t.ScheduledTo = date; t.done = false; t.rolledOver = false; }
+function confirmSnooze() {
+  const date = document.getElementById('snoozeDate').value;
+  if (!date || !UI.snoozeTaskId) return;
+  const t = S.tasks.find(x => x.id === UI.snoozeTaskId);
+  if (t) { t.date = date; t.snoozedTo = date; t.done = false; t.rolledOver = false; }
   autosave(); render(); closeSheet('shSchedule');
 }
 
@@ -581,7 +682,7 @@ function addTemplate() {
   const input = document.getElementById('tmplInput');
   const title = input.value.trim();
   if (!title) return;
-  if (!S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title });
+  if (!S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType || 'daily' });
   if (!S.tasks.find(t => t.title === title && t.isDaily && t.date === TODAY)) S.tasks.unshift(makeTask(title, true));
   input.value = '';
   autosave(); render(); renderTmplList();
@@ -590,6 +691,57 @@ function addTemplate() {
 function deleteTemplate(id) {
   S.templates = S.templates.filter(t => t.id !== id);
   autosave(); renderTmplList();
+}
+
+
+const CATS = {
+  work:     { label: '💼 Work',     cls: 'work' },
+  personal: { label: '👤 Personal', cls: 'personal' },
+  health:   { label: '💪 Health',   cls: 'health' },
+  home:     { label: '🏠 Home',     cls: 'home' },
+  learning: { label: '📚 Learning', cls: 'learning' },
+  finance:  { label: '💰 Finance',  cls: 'finance' },
+};
+
+
+function selectRecur(type) {
+  UI.recurType = type;
+  document.querySelectorAll('.recur-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('rchip-' + type).classList.add('active');
+}
+
+function shouldShowToday(template) {
+  const day = new Date().getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  if (template.recurType === 'weekdays') return day >= 1 && day <= 5;
+  if (template.recurType === 'weekends') return day === 0 || day === 6;
+  return true; // 'daily' or undefined
+}
+
+function setFilter(cat) {
+  UI.filter = cat;
+  // Update chips
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.className = 'filter-chip';
+  });
+  const chip = document.getElementById('chip-' + cat);
+  if (chip) chip.classList.add('active-' + cat);
+  renderTaskList();
+}
+
+function selectCat(cat) {
+  UI.selectedCat = cat;
+  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
+  if (cat) {
+    const chip = document.getElementById('cchip-' + cat);
+    if (chip) chip.classList.add('sel-' + cat);
+  } else {
+    document.getElementById('cchip-none').style.background = 'var(--text)';
+    document.getElementById('cchip-none').style.color = 'white';
+    setTimeout(() => {
+      document.getElementById('cchip-none').style.background = '';
+      document.getElementById('cchip-none').style.color = '';
+    }, 300);
+  }
 }
 
 function setTab(tab) {
@@ -602,13 +754,14 @@ function toggleOpt(type) {
   if (type === 'daily') {
     UI.optDaily = !UI.optDaily; UI.optSchedule = false;
     document.getElementById('btnDaily').classList.toggle('on-daily', UI.optDaily);
-    document.getElementById('btnSchedule').classList.remove('on-Schedule');
-    document.getElementById('ScheduleDateRow').classList.remove('show');
+    document.getElementById('btnSchedule').classList.remove('on-schedule');
+    document.getElementById('scheduleDateRow').classList.remove('show');
   } else {
     UI.optSchedule = !UI.optSchedule; UI.optDaily = false;
-    document.getElementById('btnSchedule').classList.toggle('on-Schedule', UI.optSchedule);
+    document.getElementById('btnSchedule').classList.toggle('on-schedule', UI.optSchedule);
     document.getElementById('btnDaily').classList.remove('on-daily');
-    document.getElementById('ScheduleDateRow').classList.toggle('show', UI.optSchedule);
+    document.getElementById('scheduleDateRow').classList.toggle('show', UI.optSchedule);
+    document.getElementById('recurSelector').classList.remove('show');
   }
 }
 
@@ -625,10 +778,11 @@ function render() { renderTaskList(); }
 function renderTmplList() {
   const el = document.getElementById('tmplList');
   if (!S.templates.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0 4px;">No recurring tasks yet.</div>'; return; }
+  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends' };
   el.innerHTML = S.templates.map(t => `
     <div class="tmpl-item">
       <div class="tmpl-dot"></div>
-      <div class="tmpl-name">${esc(t.title)}</div>
+      <div class="tmpl-name">${esc(t.title)} <span style="font-size:9px;color:var(--text3);margin-left:4px;">${recurLabel[t.recurType||'daily']}</span></div>
       <div class="tmpl-del" onclick="deleteTemplate('${t.id}')">×</div>
     </div>`).join('');
 }
@@ -637,15 +791,16 @@ function renderTaskList() {
   const el = document.getElementById('taskList');
   const tab = UI.tab;
   let tasks;
-  if (tab === 'today')    tasks = S.tasks.filter(t => t.date <= TODAY && !t.done);
-  else if (tab === 'upcoming') tasks = S.tasks.filter(t => t.date > TODAY && !t.done).sort((a,b) => a.date.localeCompare(b.date));
-  else tasks = S.tasks.filter(t => t.done).sort((a,b) => (b.completedAt||b.createdAt).localeCompare(a.completedAt||a.createdAt));
+  const catFilter = t => UI.filter === 'all' || t.category === UI.filter;
+  if (tab === 'today')    tasks = S.tasks.filter(t => t.date <= TODAY && !t.done && catFilter(t));
+  else if (tab === 'upcoming') tasks = S.tasks.filter(t => t.date > TODAY && !t.done && catFilter(t)).sort((a,b) => a.date.localeCompare(b.date));
+  else tasks = S.tasks.filter(t => t.done && catFilter(t)).sort((a,b) => (b.completedAt||b.createdAt).localeCompare(a.completedAt||a.createdAt));
 
   const doneCount = S.tasks.filter(t=>t.done).length;
   document.getElementById('tab-done').innerHTML = 'Done' + (doneCount ? `<span class="tab-badge" style="background:var(--accent);">${doneCount}</span>` : '');
 
   if (!tasks.length) {
-    const [icon, msg] = tab==='today' ? ['🌿','Nothing on the list.<br>Add a task below.'] : tab==='upcoming' ? ['📅','No upcoming tasks.<br>Schedule something to defer it.'] : ['✓','Nothing completed yet.'];
+    const [icon, msg] = tab==='today' ? ['🌿','Nothing on the list.<br>Add a task below.'] : tab==='upcoming' ? ['📅','No upcoming tasks.<br>Schedule a task for a future date.'] : ['✓','Nothing completed yet.'];
     el.innerHTML = `<div class="empty"><span class="empty-emoji">${icon}</span>${msg}</div>`;
     return;
   }
@@ -660,7 +815,20 @@ function renderTaskList() {
     if (regular.length) { html += secHead('Today', regular.length);           html += regular.map(card).join(''); }
     if (rolled.length)  { html += secHead('Carried Forward', rolled.length); html += rolled.map(card).join(''); }
   } else {
-    html = tasks.map(card).join('');
+    // Group by completion date
+    const groups = {};
+    tasks.forEach(t => {
+      const dateKey = t.completedAt ? t.completedAt.split('T')[0] : t.createdAt.split('T')[0];
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(t);
+    });
+    const sortedDates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+    sortedDates.forEach(dateKey => {
+      const isToday = dateKey === TODAY;
+      const label = isToday ? 'Today' : fmtDateLong(dateKey);
+      html += secHead(label, groups[dateKey].length);
+      html += groups[dateKey].map(card).join('');
+    });
   }
   el.innerHTML = html;
 }
@@ -672,15 +840,19 @@ function secHead(label, count) {
 function card(t) {
   const isExp = expanded.has(t.id);
   const pills = [];
-  if (t.isDaily)    pills.push('<span class="pill pill-daily">⟳ recurring</span>');
+  if (t.isDaily) {
+    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends' };
+    pills.push(`<span class="pill pill-daily">${rl[t.recurType||'daily']}</span>`);
+  }
   if (t.rolledOver) pills.push('<span class="pill pill-rolled">↑ carried</span>');
-  if (t.ScheduledTo)  pills.push(`<span class="pill pill-Scheduled">📅 ${fmtDate(t.ScheduledTo)}</span>`);
+  if (t.snoozedTo)  pills.push(`<span class="pill pill-snoozed">📅 ${fmtDate(t.snoozedTo)}</span>`);
   if (UI.tab !== 'today' && t.date) pills.push(`<span class="pill pill-date">${fmtDate(t.date)}</span>`);
+  if (t.category && CATS[t.category]) pills.push(`<span class="pill pill-${t.category}">${CATS[t.category].label}</span>`);
   if (t.done && t.completedAt) pills.push(`<span class="pill pill-date">✓ ${fmtDate(t.completedAt.split('T')[0])}</span>`);
 
   const actions = isExp ? `<div class="task-actions" onclick="event.stopPropagation()">
     ${t.done ? `<button class="act-btn restore" onclick="toggleDone('${t.id}')">↩ Restore</button>` : ''}
-    ${!t.done && !t.isDaily ? `<button class="act-btn Schedule" onclick="openScheduleSheet('${t.id}')">📅 Schedule</button>` : ''}
+    ${!t.done && !t.isDaily ? `<button class="act-btn schedule-btn" onclick="openSnoozeSheet('${t.id}')">📅 Schedule</button>` : ''}
     <button class="act-btn danger" onclick="deleteTask('${t.id}')">Delete</button>
   </div>` : '';
 
@@ -705,6 +877,14 @@ function toggleExpand(id) {
 
 function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDateLong(d) {
+  if (!d) return '';
+  const date = new Date(d + 'T12:00:00');
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dayNames[date.getDay()] + ', ' + months[date.getMonth()] + ' ' + date.getDate();
+}
+
 function fmtDate(d) {
   if (!d) return '';
   const [,m,day] = d.split('-');
@@ -717,7 +897,7 @@ async function startApp() {
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('todayLabel').textContent = new Date(TODAY+'T12:00:00').toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const tom = new Date(); tom.setDate(tom.getDate()+1);
-  document.getElementById('ScheduleDateAdd').value = tom.toISOString().split('T')[0];
+  document.getElementById('scheduleDateAdd').value = tom.toISOString().split('T')[0];
   document.getElementById('addInput').addEventListener('keydown', e => { if(e.key==='Enter') addTask(); });
   document.getElementById('tmplInput').addEventListener('keydown', e => { if(e.key==='Enter') addTemplate(); });
   await syncNow();

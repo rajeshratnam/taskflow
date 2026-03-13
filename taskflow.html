@@ -901,6 +901,7 @@ function card(t) {
 
   const actions = isExp ? `<div class="task-actions" onclick="event.stopPropagation()">
     ${t.done ? `<button class="act-btn restore" onclick="toggleDone('${t.id}')">↩ Restore</button>` : ''}
+    ${!t.done ? `<button class="act-btn" onclick="openEditSheet('${t.id}')">✏ Edit</button>` : ''}
     ${!t.done && !t.isDaily ? `<button class="act-btn schedule-btn" onclick="openSnoozeSheet('${t.id}')">📅 Schedule</button>` : ''}
     <button class="act-btn danger" onclick="deleteTask('${t.id}')">Delete</button>
   </div>` : '';
@@ -952,8 +953,131 @@ async function startApp() {
   await syncNow();
 }
 
+
+// ─── EDIT ──────────────────────────────────
+let editTaskId = null;
+let editCat = '';
+let editRecur = 'daily';
+
+function openEditSheet(id) {
+  const t = S.tasks.find(x => x.id === id);
+  if (!t) return;
+  editTaskId = id;
+  editCat = t.category || '';
+  editRecur = t.recurType || 'daily';
+
+  document.getElementById('editTitle').value = t.title;
+  document.getElementById('editDate').value = t.date || TODAY;
+
+  // Category chips
+  document.querySelectorAll('[id^="echip-"]').forEach(c => {
+    c.className = 'cat-chip';
+  });
+  const catKey = editCat || 'none';
+  const ec = document.getElementById('echip-' + catKey);
+  if (ec) ec.classList.add('sel-' + (editCat || 'none'));
+
+  // Recur
+  if (t.isDaily) {
+    document.getElementById('editRecurRow').style.display = 'flex';
+    document.getElementById('editNotRecurring').style.display = 'none';
+    document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+    const rc = document.getElementById('erchip-' + editRecur);
+    if (rc) rc.classList.add('active');
+  } else {
+    document.getElementById('editRecurRow').style.display = 'none';
+    document.getElementById('editNotRecurring').style.display = 'block';
+  }
+
+  openSheet('shEdit');
+}
+
+function editSelectCat(cat) {
+  editCat = cat;
+  document.querySelectorAll('[id^="echip-"]').forEach(c => c.className = 'cat-chip');
+  const key = cat || 'none';
+  const chip = document.getElementById('echip-' + key);
+  if (chip) chip.classList.add('sel-' + key);
+}
+
+function editSelectRecur(type) {
+  editRecur = type;
+  document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById('erchip-' + type);
+  if (chip) chip.classList.add('active');
+
+  // Also update template if this task is a daily template
+  const t = S.tasks.find(x => x.id === editTaskId);
+  if (t && t.isDaily) {
+    const tmpl = S.templates.find(x => x.title === t.title);
+    if (tmpl) tmpl.recurType = type;
+  }
+}
+
+function confirmEdit() {
+  const t = S.tasks.find(x => x.id === editTaskId);
+  if (!t) return;
+
+  const newTitle = document.getElementById('editTitle').value.trim();
+  if (!newTitle) return;
+
+  // Update template title too if recurring
+  if (t.isDaily) {
+    const tmpl = S.templates.find(x => x.title === t.title);
+    if (tmpl) { tmpl.title = newTitle; tmpl.recurType = editRecur; }
+    t.recurType = editRecur;
+  }
+
+  t.title = newTitle;
+  t.category = editCat;
+  t.date = document.getElementById('editDate').value || TODAY;
+
+  autosave(); render();
+  closeSheet('shEdit');
+}
+
 function init() { if (loadConfig()) startApp(); }
 init();
 </script>
+
+<!-- Edit Task Sheet -->
+<div class="overlay" id="shEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Edit task</div>
+
+      <label class="field-label">Task title</label>
+      <input class="field-input" id="editTitle" autocorrect="off" />
+
+      <label class="field-label">Category</label>
+      <div class="cat-selector" style="margin-top:4px;">
+        <div class="cat-chip" id="echip-none"     onclick="editSelectCat('')">—</div>
+        <div class="cat-chip" id="echip-work"     onclick="editSelectCat('work')">💼 Work</div>
+        <div class="cat-chip" id="echip-personal" onclick="editSelectCat('personal')">👤 Personal</div>
+        <div class="cat-chip" id="echip-health"   onclick="editSelectCat('health')">💪 Health</div>
+        <div class="cat-chip" id="echip-home"     onclick="editSelectCat('home')">🏠 Home</div>
+        <div class="cat-chip" id="echip-learning" onclick="editSelectCat('learning')">📚 Learning</div>
+        <div class="cat-chip" id="echip-finance"  onclick="editSelectCat('finance')">💰 Finance</div>
+      </div>
+
+      <label class="field-label">Schedule date</label>
+      <input type="date" class="field-input" id="editDate" />
+
+      <label class="field-label">Recurring</label>
+      <div class="recur-selector show" id="editRecurRow" style="display:none;">
+        <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
+        <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
+        <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
+      </div>
+      <div id="editNotRecurring" style="font-size:11px; color:var(--text3); margin-top:4px;">Not a recurring task</div>
+
+      <div class="sh-actions">
+        <button class="sh-btn sh-ghost"   onclick="closeSheet('shEdit')">Cancel</button>
+        <button class="sh-btn sh-primary" onclick="confirmEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

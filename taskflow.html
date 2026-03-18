@@ -1037,6 +1037,29 @@ function confirmEdit() {
 }
 
 function init() { if (loadConfig()) startApp(); }
+
+// Auto-sync when user returns to the app (switches tabs, reopens from home screen)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && CFG.url && CFG.key) {
+    // Check if date has changed since last render
+    const d = new Date();
+    const currentDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (currentDate !== TODAY) {
+      // Date changed — full page reload to reset TODAY constant
+      location.reload();
+    } else {
+      syncNow();
+    }
+  }
+});
+
+// Also sync when app first becomes visible after being in background on iOS
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && CFG.url && CFG.key) {
+    syncNow();
+  }
+});
+
 init();
 </script>
 

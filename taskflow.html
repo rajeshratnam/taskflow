@@ -386,6 +386,8 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
   cursor: pointer; user-select: none; text-align: center; transition: all 0.15s;
 }
 .recur-chip.active { background: var(--daily-light); color: var(--daily); border-color: rgba(124,75,150,0.4); }
+.recur-chip#editRecurOff.active { background: var(--bg2); color: var(--text2); border-color: var(--border2); }
+.recur-chip#editRecurOn.active  { background: var(--daily-light); color: var(--daily); border-color: rgba(124,75,150,0.4); }
 
 /* ── Category selector ── */
 .cat-selector {
@@ -1005,16 +1007,14 @@ function openEditSheet(id) {
   const ec = document.getElementById('echip-' + catKey);
   if (ec) ec.classList.add('sel-' + (editCat || 'none'));
 
-  // Recur
+  // Recur toggle
   if (t.isDaily) {
-    document.getElementById('editRecurRow').style.display = 'flex';
-    document.getElementById('editNotRecurring').style.display = 'none';
+    editToggleRecur(true, false); // show recur options, no save
     document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
     const rc = document.getElementById('erchip-' + editRecur);
     if (rc) rc.classList.add('active');
   } else {
-    document.getElementById('editRecurRow').style.display = 'none';
-    document.getElementById('editNotRecurring').style.display = 'block';
+    editToggleRecur(false, false); // hide recur options, no save
   }
 
   openSheet('shEdit');
@@ -1026,6 +1026,31 @@ function editSelectCat(cat) {
   const key = cat || 'none';
   const chip = document.getElementById('echip-' + key);
   if (chip) chip.classList.add('sel-' + key);
+}
+
+function editToggleRecur(makeRecur, updateChip = true) {
+  const onChip  = document.getElementById('editRecurOn');
+  const offChip = document.getElementById('editRecurOff');
+  const row     = document.getElementById('editRecurRow');
+
+  if (makeRecur) {
+    row.style.display = 'block';
+    if (updateChip) {
+      onChip.classList.add('active');
+      offChip.classList.remove('active');
+      // Default to daily if no recur type set
+      if (!editRecur) editRecur = 'daily';
+      document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+      const rc = document.getElementById('erchip-' + editRecur);
+      if (rc) rc.classList.add('active');
+    }
+  } else {
+    row.style.display = 'none';
+    if (updateChip) {
+      offChip.classList.add('active');
+      onChip.classList.remove('active');
+    }
+  }
 }
 
 function editSelectRecur(type) {
@@ -1049,8 +1074,25 @@ function confirmEdit() {
   const newTitle = document.getElementById('editTitle').value.trim();
   if (!newTitle) return;
 
-  // Update template title too if recurring
-  if (t.isDaily) {
+  const isNowRecurring = document.getElementById('editRecurRow').style.display !== 'none';
+
+  if (isNowRecurring && !t.isDaily) {
+    // Converting regular task TO recurring
+    t.isDaily = true;
+    t.recurType = editRecur;
+    t.rolledOver = false;
+    // Add to templates if not already there
+    if (!S.templates.find(x => x.title === newTitle)) {
+      S.templates.push({ id: uid(), title: newTitle, recurType: editRecur, startDate: TODAY });
+    }
+  } else if (!isNowRecurring && t.isDaily) {
+    // Converting recurring TO regular
+    t.isDaily = false;
+    t.recurType = null;
+    // Remove from templates
+    S.templates = S.templates.filter(x => x.title !== t.title);
+  } else if (t.isDaily) {
+    // Updating existing recurring task
     const tmpl = S.templates.find(x => x.title === t.title);
     if (tmpl) { tmpl.title = newTitle; tmpl.recurType = editRecur; }
     t.recurType = editRecur;
@@ -1116,15 +1158,20 @@ init();
       <input type="date" class="field-input" id="editDate" />
 
       <label class="field-label">Recurring</label>
-      <div class="recur-selector show" id="editRecurRow" style="display:none;">
-        <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
-        <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
-        <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
-        <div class="recur-chip" id="erchip-2weeks"   onclick="editSelectRecur('2weeks')">Every 2 wks</div>
-        <div class="recur-chip" id="erchip-3weeks"   onclick="editSelectRecur('3weeks')">Every 3 wks</div>
-        <div class="recur-chip" id="erchip-monthly"  onclick="editSelectRecur('monthly')">Every month</div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <div class="recur-chip" id="editRecurOff" onclick="editToggleRecur(false)">✕ Not recurring</div>
+        <div class="recur-chip" id="editRecurOn"  onclick="editToggleRecur(true)">⟳ Make recurring</div>
       </div>
-      <div id="editNotRecurring" style="font-size:11px; color:var(--text3); margin-top:4px;">Not a recurring task</div>
+      <div id="editRecurRow" style="display:none;">
+        <div class="recur-selector show">
+          <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
+          <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
+          <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
+          <div class="recur-chip" id="erchip-2weeks"   onclick="editSelectRecur('2weeks')">Every 2 wks</div>
+          <div class="recur-chip" id="erchip-3weeks"   onclick="editSelectRecur('3weeks')">Every 3 wks</div>
+          <div class="recur-chip" id="erchip-monthly"  onclick="editSelectRecur('monthly')">Every month</div>
+        </div>
+      </div>
 
       <div class="sh-actions">
         <button class="sh-btn sh-ghost"   onclick="closeSheet('shEdit')">Cancel</button>

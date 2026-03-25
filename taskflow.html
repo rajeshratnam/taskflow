@@ -514,6 +514,7 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
       <div class="recur-chip active" id="rchip-daily"    onclick="selectRecur('daily')">Every day</div>
       <div class="recur-chip"        id="rchip-weekdays" onclick="selectRecur('weekdays')">Weekdays</div>
       <div class="recur-chip"        id="rchip-weekends" onclick="selectRecur('weekends')">Weekends</div>
+      <div class="recur-chip"        id="rchip-weekly"   onclick="selectRecur('weekly')">Weekly</div>
       <div class="recur-chip"        id="rchip-2weeks"   onclick="selectRecur('2weeks')">Every 2 wks</div>
       <div class="recur-chip"        id="rchip-3weeks"   onclick="selectRecur('3weeks')">Every 3 wks</div>
       <div class="recur-chip"        id="rchip-monthly"  onclick="selectRecur('monthly')">Every month</div>
@@ -772,7 +773,7 @@ function shouldShowToday(template) {
   if (template.recurType === 'weekends') return day === 0 || day === 6;
 
   // Interval-based: 2weeks, 3weeks, monthly
-  if (['2weeks','3weeks','monthly'].includes(template.recurType)) {
+  if (['weekly','2weeks','3weeks','monthly'].includes(template.recurType)) {
     const startDate = template.startDate || TODAY;
     return isIntervalDue(startDate, template.recurType);
   }
@@ -794,7 +795,7 @@ function isIntervalDue(startDate, recurType) {
   const daysDiff = Math.round((today - start) / msPerDay);
   if (daysDiff < 0) return false;
 
-  const interval = recurType === '2weeks' ? 14 : 21;
+  const interval = recurType === 'weekly' ? 7 : recurType === '2weeks' ? 14 : 21;
   return daysDiff % interval === 0;
 }
 
@@ -857,7 +858,7 @@ function render() { renderTaskList(); }
 function renderTmplList() {
   const el = document.getElementById('tmplList');
   if (!S.templates.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0 4px;">No recurring tasks yet.</div>'; return; }
-  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', '2weeks':'Every 2 weeks', '3weeks':'Every 3 weeks', monthly:'Every month' };
+  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', weekly:'Weekly', '2weeks':'Every 2 weeks', '3weeks':'Every 3 weeks', monthly:'Every month' };
   el.innerHTML = S.templates.map(t => `
     <div class="tmpl-item">
       <div class="tmpl-dot"></div>
@@ -920,7 +921,7 @@ function card(t) {
   const isExp = expanded.has(t.id);
   const pills = [];
   if (t.isDaily) {
-    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends', '2weeks':'⟳ Every 2 wks', '3weeks':'⟳ Every 3 wks', monthly:'⟳ Monthly' };
+    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends', weekly:'⟳ Weekly', '2weeks':'⟳ Every 2 wks', '3weeks':'⟳ Every 3 wks', monthly:'⟳ Monthly' };
     pills.push(`<span class="pill pill-daily">${rl[t.recurType||'daily']}</span>`);
   }
   if (t.rolledOver) pills.push('<span class="pill pill-rolled">↑ carried</span>');
@@ -1167,6 +1168,7 @@ init();
           <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
           <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
           <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
+          <div class="recur-chip" id="erchip-weekly"   onclick="editSelectRecur('weekly')">Weekly</div>
           <div class="recur-chip" id="erchip-2weeks"   onclick="editSelectRecur('2weeks')">Every 2 wks</div>
           <div class="recur-chip" id="erchip-3weeks"   onclick="editSelectRecur('3weeks')">Every 3 wks</div>
           <div class="recur-chip" id="erchip-monthly"  onclick="editSelectRecur('monthly')">Every month</div>

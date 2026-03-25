@@ -512,6 +512,9 @@ code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4
       <div class="recur-chip active" id="rchip-daily"    onclick="selectRecur('daily')">Every day</div>
       <div class="recur-chip"        id="rchip-weekdays" onclick="selectRecur('weekdays')">Weekdays</div>
       <div class="recur-chip"        id="rchip-weekends" onclick="selectRecur('weekends')">Weekends</div>
+      <div class="recur-chip"        id="rchip-2weeks"   onclick="selectRecur('2weeks')">Every 2 wks</div>
+      <div class="recur-chip"        id="rchip-3weeks"   onclick="selectRecur('3weeks')">Every 3 wks</div>
+      <div class="recur-chip"        id="rchip-monthly"  onclick="selectRecur('monthly')">Every month</div>
     </div>
 
     <!-- Schedule date — shown when Schedule is active -->
@@ -696,7 +699,7 @@ function addTask() {
   const task = makeTask(title, UI.optDaily, date);
   if (UI.selectedCat) task.category = UI.selectedCat;
   if (UI.optSchedule && date !== TODAY) task.snoozedTo = date;
-  if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType });
+  if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType, startDate: TODAY });
   S.tasks.unshift(task);
   input.value = '';
   UI.selectedCat = '';
@@ -733,7 +736,7 @@ function addTemplate() {
   const input = document.getElementById('tmplInput');
   const title = input.value.trim();
   if (!title) return;
-  if (!S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType || 'daily' });
+  if (!S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType || 'daily', startDate: TODAY });
   if (!S.tasks.find(t => t.title === title && t.isDaily && t.date === TODAY)) S.tasks.unshift(makeTask(title, true));
   input.value = '';
   autosave(); render(); renderTmplList();
@@ -765,7 +768,32 @@ function shouldShowToday(template) {
   const day = new Date().getDay(); // 0=Sun, 1=Mon ... 6=Sat
   if (template.recurType === 'weekdays') return day >= 1 && day <= 5;
   if (template.recurType === 'weekends') return day === 0 || day === 6;
+
+  // Interval-based: 2weeks, 3weeks, monthly
+  if (['2weeks','3weeks','monthly'].includes(template.recurType)) {
+    const startDate = template.startDate || TODAY;
+    return isIntervalDue(startDate, template.recurType);
+  }
+
   return true; // 'daily' or undefined
+}
+
+function isIntervalDue(startDate, recurType) {
+  const start = new Date(startDate + 'T00:00:00');
+  const today = new Date(TODAY + 'T00:00:00');
+
+  if (recurType === 'monthly') {
+    // Same day of month as start date
+    return today.getDate() === start.getDate();
+  }
+
+  // For 2weeks and 3weeks — check if today is exactly N weeks from start
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysDiff = Math.round((today - start) / msPerDay);
+  if (daysDiff < 0) return false;
+
+  const interval = recurType === '2weeks' ? 14 : 21;
+  return daysDiff % interval === 0;
 }
 
 function setFilter(cat) {
@@ -827,7 +855,7 @@ function render() { renderTaskList(); }
 function renderTmplList() {
   const el = document.getElementById('tmplList');
   if (!S.templates.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0 4px;">No recurring tasks yet.</div>'; return; }
-  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends' };
+  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', '2weeks':'Every 2 weeks', '3weeks':'Every 3 weeks', monthly:'Every month' };
   el.innerHTML = S.templates.map(t => `
     <div class="tmpl-item">
       <div class="tmpl-dot"></div>
@@ -890,7 +918,7 @@ function card(t) {
   const isExp = expanded.has(t.id);
   const pills = [];
   if (t.isDaily) {
-    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends' };
+    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends', '2weeks':'⟳ Every 2 wks', '3weeks':'⟳ Every 3 wks', monthly:'⟳ Monthly' };
     pills.push(`<span class="pill pill-daily">${rl[t.recurType||'daily']}</span>`);
   }
   if (t.rolledOver) pills.push('<span class="pill pill-rolled">↑ carried</span>');
@@ -1092,6 +1120,9 @@ init();
         <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
         <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
         <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
+        <div class="recur-chip" id="erchip-2weeks"   onclick="editSelectRecur('2weeks')">Every 2 wks</div>
+        <div class="recur-chip" id="erchip-3weeks"   onclick="editSelectRecur('3weeks')">Every 3 wks</div>
+        <div class="recur-chip" id="erchip-monthly"  onclick="editSelectRecur('monthly')">Every month</div>
       </div>
       <div id="editNotRecurring" style="font-size:11px; color:var(--text3); margin-top:4px;">Not a recurring task</div>
 

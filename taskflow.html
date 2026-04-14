@@ -913,6 +913,74 @@ function renderTaskList() {
   el.innerHTML = html;
 }
 
+
+function nextDueDate(tmpl) {
+  const startDate = tmpl.startDate || TODAY;
+  const start = new Date(startDate + 'T00:00:00');
+  const todayDate = new Date(TODAY + 'T00:00:00');
+  const msPerDay = 24 * 60 * 60 * 1000;
+
+  if (tmpl.recurType === 'daily') {
+    // Next occurrence is tomorrow
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'weekdays') {
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    while (next.getDay() === 0 || next.getDay() === 6) next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'weekends') {
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    while (next.getDay() !== 0 && next.getDay() !== 6) next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'monthly') {
+    // Same day next month
+    const next = new Date(todayDate);
+    next.setMonth(next.getMonth() + 1);
+    next.setDate(start.getDate());
+    return next.toISOString().split('T')[0];
+  }
+
+  // weekly, 2weeks, 3weeks — find next interval from start
+  const interval = tmpl.recurType === 'weekly' ? 7 : tmpl.recurType === '2weeks' ? 14 : 21;
+  const daysSinceStart = Math.round((todayDate - start) / msPerDay);
+  const daysUntilNext = interval - (daysSinceStart % interval);
+  const next = new Date(todayDate);
+  next.setDate(next.getDate() + daysUntilNext);
+  return next.toISOString().split('T')[0];
+}
+
+function recurCard(tmpl) {
+  const nextDate = nextDueDate(tmpl);
+  const recurLabels = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', weekly:'Weekly', '2weeks':'Every 2 wks', '3weeks':'Every 3 wks', monthly:'Monthly' };
+  const label = recurLabels[tmpl.recurType || 'daily'];
+  const catPill = tmpl.category && CATS[tmpl.category] ? `<span class="pill pill-${tmpl.category}">${CATS[tmpl.category].label}</span>` : '';
+  const daysUntil = Math.round((new Date(nextDate + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 86400000);
+  const dueLabel = daysUntil === 1 ? 'tomorrow' : daysUntil === 7 ? 'in 1 week' : `${fmtDate(nextDate)}`;
+
+  return `<div class="task-card is-daily" style="opacity:0.85;">
+    <div class="check" style="border-color:var(--daily); cursor:default;">
+      <span style="font-size:10px; color:var(--daily);">⟳</span>
+    </div>
+    <div class="task-body">
+      <div class="task-title">${esc(tmpl.title)}</div>
+      <div class="task-pills">
+        <span class="pill pill-daily">${label}</span>
+        <span class="pill pill-date">next: ${dueLabel}</span>
+        ${catPill}
+      </div>
+    </div>
+  </div>`;
+}
+
 function secHead(label, count) {
   return `<div class="section-head"><span class="section-label">${label}</span><span class="section-count">${count}</span><div class="section-line"></div></div>`;
 }

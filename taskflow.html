@@ -874,7 +874,7 @@ function renderTaskList() {
   const catFilter = t => UI.filter === 'all' || t.category === UI.filter;
   if (tab === 'today')    tasks = S.tasks.filter(t => t.date <= TODAY && !t.done && catFilter(t));
   else if (tab === 'upcoming') tasks = S.tasks.filter(t => t.date > TODAY && !t.done && catFilter(t)).sort((a,b) => a.date.localeCompare(b.date));
-  else tasks = S.tasks.filter(t => t.done && catFilter(t)).sort((a,b) => (b.completedAt||b.createdAt).localeCompare(a.completedAt||a.createdAt));
+  else tasks = S.tasks.filter(t => t.done && catFilter(t)).sort((a,b) => (b.completedAt||b.createdAt||'').localeCompare(a.completedAt||a.createdAt||''));
 
   const doneCount = S.tasks.filter(t=>t.done).length;
   document.getElementById('tab-done').innerHTML = 'Done' + (doneCount ? `<span class="tab-badge" style="background:var(--accent);">${doneCount}</span>` : '');
@@ -898,14 +898,22 @@ function renderTaskList() {
     // Group by completion date
     const groups = {};
     tasks.forEach(t => {
-      const dateKey = t.completedAt ? t.completedAt.split('T')[0] : t.createdAt.split('T')[0];
+      const dateKey = t.completedAt
+        ? t.completedAt.split('T')[0]
+        : t.createdAt
+        ? t.createdAt.split('T')[0]
+        : 'earlier';
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(t);
     });
-    const sortedDates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+    const sortedDates = Object.keys(groups).sort((a,b) => {
+      if (a === 'earlier') return 1;
+      if (b === 'earlier') return -1;
+      return b.localeCompare(a);
+    });
     sortedDates.forEach(dateKey => {
       const isToday = dateKey === TODAY;
-      const label = isToday ? 'Today' : fmtDateLong(dateKey);
+      const label = isToday ? 'Today' : dateKey === 'earlier' ? 'Earlier' : fmtDateLong(dateKey);
       html += secHead(label, groups[dateKey].length);
       html += groups[dateKey].map(card).join('');
     });

@@ -3,249 +3,1275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Send Rajesh a Reminder</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TaskFlow</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
 :root {
-  --bg: #f5f2ed; --bg2: #ece8e1; --surface: #ffffff;
-  --border: #ddd9d2; --border2: #ccc8c0;
-  --text: #1a1814; --text2: #6b6760; --text3: #aaa8a3;
-  --accent: #2d5a3d; --accent-light: #e8f0ea;
-  --red: #c0392b; --red-light: #fdecea;
-  --radius: 12px; --radius-sm: 8px;
+  --bg: #f5f2ed;
+  --bg2: #ece8e1;
+  --surface: #ffffff;
+  --border: #ddd9d2;
+  --border2: #ccc8c0;
+  --text: #1a1814;
+  --text2: #6b6760;
+  --text3: #aaa8a3;
+  --accent: #2d5a3d;
+  --accent-light: #e8f0ea;
+  --daily: #7c4b96;
+  --daily-light: #f0eaf5;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --blue: #2c5f8a;
+  --blue-light: #e8f0f7;
+  --gold: #b8860b;
+  --gold-light: #fdf6e3;
+  --cat-work:     #2c5f8a;
+  --cat-personal: #2d5a3d;
+  --cat-health:   #c0392b;
+  --cat-home:     #b8860b;
+  --cat-learning: #7c4b96;
+  --cat-finance:  #1a7a6e;
+  --cat-work-light:     #e8f0f7;
+  --cat-personal-light: #e8f0ea;
+  --cat-health-light:   #fdecea;
+  --cat-home-light:     #fdf6e3;
+  --cat-learning-light: #f0eaf5;
+  --cat-finance-light:  #e6f5f3;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
-html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; }
-.page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-.logo { font-family: 'Lora', serif; font-size: 26px; font-style: italic; color: var(--accent); margin-bottom: 4px; }
-.subtitle { font-size: 11px; color: var(--text3); margin-bottom: 24px; line-height: 1.7; }
-.field-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; margin-top: 16px; display: block; }
+
+/* iOS Safari scroll fix: use absolute positioning */
+* { -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Main shell using absolute positioning — most reliable on iOS */
+.app {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ── Header ── */
+.header {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px 10px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+.logo { font-family: 'Lora', serif; font-size: 22px; font-style: italic; color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.sync-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 10px; color: var(--text3);
+  cursor: pointer; user-select: none;
+}
+.sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text3); flex-shrink: 0; transition: background 0.4s;
+}
+.sync-dot.ok      { background: var(--accent); }
+.sync-dot.pending { background: var(--gold); animation: pulse 1.2s infinite; }
+.sync-dot.error   { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; user-select: none;
+}
+
+.today-label { font-size: 10px; color: var(--text3); }
+
+/* ── Tabs ── */
+.tabs {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 1; padding: 10px 4px 8px; text-align: center;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.18s; user-select: none; position: relative;
+}
+.tab.active { color: var(--accent); border-color: var(--accent); }
+.tab-badge {
+  position: absolute; top: 7px; right: 8px;
+  color: white; font-size: 8px;
+  min-width: 14px; height: 14px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
+}
+
+/* ── Scroll area — THE KEY FIX ── */
+.scroll-area {
+  flex: 1;
+  /* This combination is what actually works on iOS Safari */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 14px 20px;
+}
+
+/* ── Add bar ── */
+.add-bar {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+.add-row { display: flex; gap: 8px; align-items: center; margin-bottom: 7px; }
+.add-input {
+  flex: 1; background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 13px;
+  font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text);
+  outline: none; -webkit-appearance: none; transition: border-color 0.2s;
+}
+.add-input:focus { border-color: var(--accent); background: white; }
+.add-input::placeholder { color: var(--text3); font-size: 13px; }
+
+.add-submit {
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  background: var(--accent); border: none; color: white; font-size: 22px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.add-options { display: flex; gap: 6px; }
+.opt-btn {
+  flex: 1; padding: 7px 6px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2);
+  cursor: pointer; text-align: center; user-select: none;
+}
+.opt-btn.on-daily  { border-color: rgba(124,75,150,0.4); background: var(--daily-light); color: var(--daily); }
+.opt-btn.on-schedule { border-color: rgba(44,95,138,0.4);  background: var(--blue-light);  color: var(--blue); }
+
+.schedule-date-row { margin-top: 7px; display: none; }
+.schedule-date-row.show { display: block; }
+.schedule-date-input {
+  width: 100%; background: var(--bg2); border: 1.5px solid var(--blue);
+  border-radius: var(--radius-sm); padding: 9px 13px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
+  outline: none; -webkit-appearance: none;
+}
+
+
+/* ── Filter bar ── */
+.filter-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.filter-chip.active-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.filter-chip.active-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.filter-chip.active-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.filter-chip.active-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.filter-chip.active-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.filter-chip.active-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+.filter-chip.active-all      { background: var(--text); color: white; border-color: var(--text); }
+
+/* ── Sections ── */
+.section-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
+.section-head:first-child { margin-top: 0; }
+.section-label { font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); }
+.section-count { font-size: 9px; background: var(--bg2); color: var(--text3); border: 1px solid var(--border); border-radius: 8px; padding: 0 6px; height: 16px; display: flex; align-items: center; }
+.section-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── Task card ── */
+.task-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 13px; margin-bottom: 6px;
+  display: flex; gap: 11px; align-items: flex-start;
+  box-shadow: var(--shadow);
+  animation: slideIn 0.18s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.task-card.done { background: var(--bg2); box-shadow: none; }
+.task-card.is-daily  { border-left: 3px solid var(--daily); }
+.task-card.is-rolled { border-left: 3px solid var(--gold); }
+
+.check {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px; cursor: pointer;
+}
+.task-card.done .check { background: var(--accent); border-color: var(--accent); }
+.task-card.is-daily:not(.done) .check { border-color: var(--daily); }
+.check-svg { display: none; }
+.task-card.done .check-svg { display: block; }
+
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: 13px; color: var(--text); line-height: 1.4; word-break: break-word; }
+.task-card.done .task-title { text-decoration: line-through; color: var(--text3); }
+
+.task-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.pill { font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 10px; border: 1px solid; }
+.pill-daily   { color: var(--daily); border-color: rgba(124,75,150,0.25); background: var(--daily-light); }
+.pill-rolled  { color: var(--gold);  border-color: rgba(184,134,11,0.25);  background: var(--gold-light); }
+.pill-snoozed { color: var(--blue);  border-color: rgba(44,95,138,0.25);   background: var(--blue-light); }
+.pill-date    { color: var(--text3); border-color: var(--border);          background: var(--bg2); }
+
+.pill-work     { color: var(--cat-work);     border-color: rgba(44,95,138,0.3);   background: var(--cat-work-light); }
+.pill-personal { color: var(--cat-personal); border-color: rgba(45,90,61,0.3);    background: var(--cat-personal-light); }
+.pill-health   { color: var(--cat-health);   border-color: rgba(192,57,43,0.3);   background: var(--cat-health-light); }
+.pill-home     { color: var(--cat-home);     border-color: rgba(184,134,11,0.3);  background: var(--cat-home-light); }
+.pill-learning { color: var(--cat-learning); border-color: rgba(124,75,150,0.3);  background: var(--cat-learning-light); }
+.pill-finance  { color: var(--cat-finance);  border-color: rgba(26,122,110,0.3);  background: var(--cat-finance-light); }
+
+.task-actions { display: flex; gap: 6px; margin-top: 8px; }
+.act-btn {
+  flex: 1; padding: 6px 0; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg2); color: var(--text2);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; cursor: pointer; text-align: center;
+}
+.act-btn.danger { color: var(--red); border-color: rgba(192,57,43,0.2); background: var(--red-light); }
+.act-btn.restore { color: var(--accent); border-color: rgba(45,90,61,0.2); background: var(--accent-light); }
+.act-btn.schedule-btn { color: var(--blue); border-color: rgba(44,95,138,0.2); background: var(--blue-light); }
+
+/* ── Rollover banner ── */
+.rollover-banner {
+  background: var(--gold-light); border: 1px solid rgba(184,134,11,0.22);
+  border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 10px;
+  font-size: 11px; color: var(--gold);
+}
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 56px 20px; color: var(--text3); font-size: 12px; line-height: 2.2; }
+.empty-emoji { font-size: 34px; display: block; margin-bottom: 10px; }
+
+/* ── Sheets ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.38); z-index: 200;
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.sheet {
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 0 0 calc(20px + env(safe-area-inset-bottom));
+  width: 100%; transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+  max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.overlay.open .sheet { transform: translateY(0); }
+
+.sheet-inner { padding: 0 20px; }
+.sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 14px auto 16px; }
+.sheet-title { font-family: 'Lora', serif; font-size: 19px; font-style: italic; color: var(--accent); margin-bottom: 16px; }
+
+.field-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; margin-top: 14px; display: block; }
 .field-label:first-of-type { margin-top: 0; }
-.field-input { width: 100%; background: var(--bg2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text); outline: none; -webkit-appearance: none; transition: border-color 0.2s; resize: none; }
-.field-input:focus { border-color: var(--accent); background: white; }
-.field-input::placeholder { color: var(--text3); font-size: 12px; }
-.field-input.large { font-size: 14px; }
-.cat-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
-.cat-chip { padding: 6px 11px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg2); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); cursor: pointer; user-select: none; transition: all 0.15s; white-space: nowrap; }
-.cat-chip.sel-work     { background: #e8f0f7; color: #2c5f8a; border-color: rgba(44,95,138,0.4); }
-.cat-chip.sel-personal { background: #e8f0ea; color: #2d5a3d; border-color: rgba(45,90,61,0.4); }
-.cat-chip.sel-health   { background: #fdecea; color: #c0392b; border-color: rgba(192,57,43,0.4); }
-.cat-chip.sel-home     { background: #fdf6e3; color: #b8860b; border-color: rgba(184,134,11,0.4); }
-.cat-chip.sel-learning { background: #f0eaf5; color: #7c4b96; border-color: rgba(124,75,150,0.4); }
-.cat-chip.sel-finance  { background: #e6f5f3; color: #1a7a6e; border-color: rgba(26,122,110,0.4); }
-.primary-btn { width: 100%; margin-top: 20px; padding: 13px; border-radius: var(--radius-sm); background: var(--accent); border: none; color: white; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; }
-.primary-btn:active { transform: scale(0.98); background: #1e3d2a; }
-.primary-btn:disabled { background: var(--text3); cursor: not-allowed; transform: none; }
-.ghost-btn { width: 100%; margin-top: 10px; padding: 11px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; color: var(--text2); font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-.ghost-btn:active { background: var(--bg2); }
-.success-state { display: none; text-align: center; padding: 20px 0 10px; }
-.success-icon { font-size: 40px; margin-bottom: 12px; }
-.success-title { font-family: 'Lora', serif; font-size: 20px; font-style: italic; color: var(--accent); margin-bottom: 8px; }
-.success-sub { font-size: 11px; color: var(--text3); line-height: 1.8; }
-.error-msg { font-size: 11px; color: var(--red); margin-top: 10px; display: none; background: var(--red-light); border: 1px solid rgba(192,57,43,0.2); border-radius: var(--radius-sm); padding: 8px 12px; line-height: 1.6; }
-.info-box { background: var(--accent-light); border: 1px solid rgba(45,90,61,0.2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 11px; color: var(--accent); line-height: 1.7; margin-bottom: 16px; }
-.footer { margin-top: 20px; font-size: 10px; color: var(--text3); text-align: center; line-height: 1.8; }
-.setup-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+.field-input {
+  width: 100%; background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 13px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
+  outline: none; -webkit-appearance: none; transition: border-color 0.2s;
+}
+.field-input:focus { border-color: var(--accent); }
+.field-input.small { font-size: 11px; }
+
+.sh-actions { display: flex; gap: 8px; margin-top: 18px; }
+.sh-btn {
+  flex: 1; padding: 12px; border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  cursor: pointer; border: 1.5px solid; text-align: center; user-select: none;
+}
+.sh-primary { background: var(--accent); border-color: var(--accent); color: white; }
+.sh-ghost   { background: transparent; border-color: var(--border); color: var(--text2); }
+.sh-danger  { background: var(--red-light); border-color: rgba(192,57,43,0.3); color: var(--red); }
+
+.info-box { border-radius: var(--radius-sm); padding: 12px 14px; font-size: 11px; line-height: 1.7; margin-top: 14px; }
+.info-box.blue  { background: var(--blue-light);  color: var(--blue);   border: 1px solid rgba(44,95,138,0.2); }
+.info-box.green { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(45,90,61,0.2); }
+.info-box strong { display: block; margin-bottom: 3px; font-size: 12px; }
+
+code { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+.tmpl-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 5px; }
+.tmpl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--daily); flex-shrink: 0; }
+.tmpl-name { flex: 1; font-size: 12px; color: var(--text2); }
+.tmpl-del { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(192,57,43,0.2); background: var(--red-light); color: var(--red); font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.add-tmpl-row { display: flex; gap: 8px; margin-top: 8px; }
+
+
+
+/* ── Add bar extras ── */
+.add-section-label {
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text3); margin: 8px 0 5px;
+}
+.cat-selector {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.cat-chip {
+  padding: 5px 9px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none; transition: all 0.15s;
+  white-space: nowrap;
+}
+.cat-chip.sel-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.cat-chip.sel-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.cat-chip.sel-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.cat-chip.sel-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.cat-chip.sel-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.cat-chip.sel-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+.cat-chip.sel-none     { background: var(--text); color: white; border-color: var(--text); }
+
+/* ── Recurrence selector ── */
+.recur-selector {
+  display: flex; gap: 6px; margin-top: 7px; display: none;
+}
+.recur-selector.show { display: flex; }
+.recur-chip {
+  flex: 1; padding: 6px 4px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text2); letter-spacing: 0.03em;
+  cursor: pointer; user-select: none; text-align: center; transition: all 0.15s;
+}
+.recur-chip.active { background: var(--daily-light); color: var(--daily); border-color: rgba(124,75,150,0.4); }
+.recur-chip#editRecurOff.active { background: var(--bg2); color: var(--text2); border-color: var(--border2); }
+.recur-chip#editRecurOn.active  { background: var(--daily-light); color: var(--daily); border-color: rgba(124,75,150,0.4); }
+
+/* ── Category selector ── */
+.cat-selector {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px;
+}
+.cat-chip {
+  padding: 5px 10px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text2);
+  cursor: pointer; user-select: none; transition: all 0.15s;
+}
+.cat-chip.sel-work     { background: var(--cat-work-light);     color: var(--cat-work);     border-color: rgba(44,95,138,0.4); }
+.cat-chip.sel-personal { background: var(--cat-personal-light); color: var(--cat-personal); border-color: rgba(45,90,61,0.4); }
+.cat-chip.sel-health   { background: var(--cat-health-light);   color: var(--cat-health);   border-color: rgba(192,57,43,0.4); }
+.cat-chip.sel-home     { background: var(--cat-home-light);     color: var(--cat-home);     border-color: rgba(184,134,11,0.4); }
+.cat-chip.sel-learning { background: var(--cat-learning-light); color: var(--cat-learning); border-color: rgba(124,75,150,0.4); }
+.cat-chip.sel-finance  { background: var(--cat-finance-light);  color: var(--cat-finance);  border-color: rgba(26,122,110,0.4); }
+
+/* ── Onboarding ── */
+.onboard-overlay {
+  position: fixed; inset: 0; background: var(--bg); z-index: 300;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px 24px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  transition: opacity 0.3s;
+}
+.onboard-overlay.hidden { opacity: 0; pointer-events: none; }
+.onboard-logo { font-family: 'Lora', serif; font-size: 36px; font-style: italic; color: var(--accent); margin-bottom: 8px; }
+.onboard-sub { font-size: 12px; color: var(--text3); margin-bottom: 32px; text-align: center; line-height: 1.8; }
+.onboard-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.onboard-step { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="card">
 
-    <!-- Setup screen (shown to Rajesh only, to enter keys) -->
-    <div id="setupScreen" style="display:none;">
-      <span class="setup-icon">⚙️</span>
-      <div class="logo">Setup</div>
-      <div class="subtitle">Enter your Supabase credentials.<br>These are saved on this device only — not in the code.</div>
-      <div class="info-box">This screen is only for Rajesh. Once saved, it won't appear again on this device.</div>
-      <label class="field-label">Supabase Project URL</label>
-      <input class="field-input" id="setupUrl" placeholder="https://xxxx.supabase.co" autocorrect="off" autocapitalize="off" />
-      <label class="field-label">Supabase Anon Key</label>
-      <input class="field-input" id="setupKey" placeholder="eyJhbGci..." autocorrect="off" autocapitalize="off" />
-      <button class="primary-btn" onclick="saveSetup()">Save & Continue</button>
-      <div class="error-msg" id="setupError"></div>
+<!-- Onboarding -->
+<div class="onboard-overlay" id="onboard">
+  <div class="onboard-logo">TaskFlow</div>
+  <div class="onboard-sub">Your personal daily task manager.<br>Powered by Supabase. Works everywhere.</div>
+  <div class="onboard-card">
+    <div class="onboard-step">First-time setup — connect your database</div>
+    <div class="info-box blue" style="margin-top:0; margin-bottom:14px;">
+      <strong>Before you start</strong>
+      1. Go to <strong>supabase.com</strong> → New Project<br>
+      2. SQL Editor → run the setup SQL<br>
+      3. Settings → API → copy URL and anon key
     </div>
-
-    <!-- Form screen -->
-    <div id="formState" style="display:none;">
-      <div class="logo">TaskFlow</div>
-      <div class="subtitle">Send Rajesh a reminder or task.<br>He'll see it next time he opens his app.</div>
-
-      <label class="field-label">Your name</label>
-      <input class="field-input large" id="senderName" placeholder="Who is this from..." autocorrect="off" />
-
-      <label class="field-label">Reminder / Task</label>
-      <textarea class="field-input large" id="taskTitle" placeholder="What should Rajesh do..." rows="3" autocorrect="off"></textarea>
-
-      <label class="field-label">Category (optional)</label>
-      <div class="cat-row">
-        <div class="cat-chip" id="chip-work"     onclick="selectCat('work')">💼 Work</div>
-        <div class="cat-chip" id="chip-personal" onclick="selectCat('personal')">👤 Personal</div>
-        <div class="cat-chip" id="chip-health"   onclick="selectCat('health')">💪 Health</div>
-        <div class="cat-chip" id="chip-home"     onclick="selectCat('home')">🏠 Home</div>
-        <div class="cat-chip" id="chip-learning" onclick="selectCat('learning')">📚 Learning</div>
-        <div class="cat-chip" id="chip-finance"  onclick="selectCat('finance')">💰 Finance</div>
-      </div>
-
-      <button class="primary-btn" id="submitBtn" onclick="submitReminder()">Send Reminder</button>
-      <div class="error-msg" id="errorMsg"></div>
+    <label class="field-label">Project URL</label>
+    <input class="field-input small" id="obUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" autocorrect="off" autocapitalize="off" />
+    <label class="field-label">Anon Public Key</label>
+    <input class="field-input small" id="obKey" placeholder="eyJhbGci..." autocomplete="off" autocorrect="off" autocapitalize="off" />
+    <div class="sh-actions" style="margin-top:16px;">
+      <button class="sh-btn sh-primary" onclick="saveSupabaseConfig()">Connect & Start</button>
     </div>
-
-    <!-- Success screen -->
-    <div class="success-state" id="successState">
-      <div class="success-icon">✅</div>
-      <div class="success-title">Reminder sent!</div>
-      <div class="success-sub">Rajesh will see it next time<br>he opens his TaskFlow app.</div>
-      <button class="ghost-btn" onclick="resetForm()">Send another reminder</button>
-    </div>
-
+    <div id="obError" style="font-size:11px; color:var(--red); margin-top:10px; display:none;"></div>
   </div>
-  <div class="footer">Powered by TaskFlow · Personal task manager</div>
+</div>
+
+<!-- Main App -->
+<div class="app" id="mainApp" style="display:none;">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">TaskFlow</div>
+      <div class="header-right">
+        <div class="sync-pill" onclick="openSheet('shSync')">
+          <div class="sync-dot" id="syncDot"></div>
+          <span id="syncLabel">ready</span>
+        </div>
+        <div class="icon-btn" onclick="openSettings()">⚙</div>
+      </div>
+    </div>
+    <div class="today-label" id="todayLabel"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-today"    onclick="setTab('today')">Today</div>
+    <div class="tab"        id="tab-upcoming" onclick="setTab('upcoming')">Upcoming</div>
+    <div class="tab"        id="tab-done"     onclick="setTab('done')">Done</div>
+  </div>
+
+
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-chip active-all" id="chip-all" onclick="setFilter('all')">All</div>
+    <div class="filter-chip" id="chip-work"     onclick="setFilter('work')">💼 Work</div>
+    <div class="filter-chip" id="chip-personal" onclick="setFilter('personal')">👤 Personal</div>
+    <div class="filter-chip" id="chip-health"   onclick="setFilter('health')">💪 Health</div>
+    <div class="filter-chip" id="chip-home"     onclick="setFilter('home')">🏠 Home</div>
+    <div class="filter-chip" id="chip-learning" onclick="setFilter('learning')">📚 Learning</div>
+    <div class="filter-chip" id="chip-finance"  onclick="setFilter('finance')">💰 Finance</div>
+  </div>
+  <div class="scroll-area" id="taskList"></div>
+
+  <div class="add-bar">
+    <!-- Input row -->
+    <div class="add-row">
+      <input class="add-input" id="addInput" placeholder="What needs doing..." autocorrect="off" />
+      <button class="add-submit" onclick="addTask()">+</button>
+    </div>
+
+    <!-- Category row — always visible -->
+    <div class="add-section-label">Category</div>
+    <div class="cat-selector">
+      <div class="cat-chip" id="cchip-none"     onclick="selectCat('')">—</div>
+      <div class="cat-chip" id="cchip-work"     onclick="selectCat('work')">💼 Work</div>
+      <div class="cat-chip" id="cchip-personal" onclick="selectCat('personal')">👤 Personal</div>
+      <div class="cat-chip" id="cchip-health"   onclick="selectCat('health')">💪 Health</div>
+      <div class="cat-chip" id="cchip-home"     onclick="selectCat('home')">🏠 Home</div>
+      <div class="cat-chip" id="cchip-learning" onclick="selectCat('learning')">📚 Learning</div>
+      <div class="cat-chip" id="cchip-finance"  onclick="selectCat('finance')">💰 Finance</div>
+    </div>
+
+    <!-- Options row -->
+    <div class="add-options" style="margin-top:7px;">
+      <button class="opt-btn" id="btnDaily"    onclick="toggleOpt('daily')">⟳ Recurring</button>
+      <button class="opt-btn" id="btnSchedule" onclick="toggleOpt('schedule')">📅 Schedule</button>
+    </div>
+
+    <!-- Recurrence type — shown when Recurring is active -->
+    <div class="recur-selector" id="recurSelector">
+      <div class="recur-chip active" id="rchip-daily"    onclick="selectRecur('daily')">Every day</div>
+      <div class="recur-chip"        id="rchip-weekdays" onclick="selectRecur('weekdays')">Weekdays</div>
+      <div class="recur-chip"        id="rchip-weekends" onclick="selectRecur('weekends')">Weekends</div>
+      <div class="recur-chip"        id="rchip-weekly"   onclick="selectRecur('weekly')">Weekly</div>
+      <div class="recur-chip"        id="rchip-2weeks"   onclick="selectRecur('2weeks')">Every 2 wks</div>
+      <div class="recur-chip"        id="rchip-3weeks"   onclick="selectRecur('3weeks')">Every 3 wks</div>
+      <div class="recur-chip"        id="rchip-monthly"  onclick="selectRecur('monthly')">Every month</div>
+    </div>
+
+    <!-- Schedule date — shown when Schedule is active -->
+    <div class="schedule-date-row" id="scheduleDateRow">
+      <input type="date" class="schedule-date-input" id="scheduleDateAdd" />
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Sheet -->
+<div class="overlay" id="shSchedule">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Schedule task</div>
+      <label class="field-label">Defer to date</label>
+      <input type="date" class="field-input" id="snoozeDate" />
+      <div class="sh-actions">
+        <button class="sh-btn sh-ghost"   onclick="closeSheet('shSchedule')">Cancel</button>
+        <button class="sh-btn sh-primary" onclick="confirmSnooze()">Schedule</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Sheet -->
+<div class="overlay" id="shSync">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Sync status</div>
+      <div id="syncDetail" style="font-size:12px; color:var(--text2); line-height:1.8; margin-bottom:14px;"></div>
+      <button class="sh-btn sh-primary" style="width:100%;" onclick="syncNow()">🔄 Sync now</button>
+      <div class="sh-actions" style="margin-top:8px;">
+        <button class="sh-btn sh-ghost"  onclick="closeSheet('shSync')">Close</button>
+        <button class="sh-btn sh-danger" onclick="resetConfig()">Reset config</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Sheet -->
+<div class="overlay" id="shSettings">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Settings</div>
+      <label class="field-label">Daily recurring templates</label>
+      <div id="tmplList"></div>
+      <div class="add-tmpl-row">
+        <input class="field-input" id="tmplInput" placeholder="Add recurring task..." style="flex:1;" autocorrect="off" />
+        <button class="sh-btn sh-primary" style="flex:0 0 auto; padding:10px 14px;" onclick="addTemplate()">Add</button>
+      </div>
+      <div class="info-box green">
+        <strong>How rollover works</strong>
+        Incomplete tasks move to today each morning.
+        Recurring tasks reset fresh daily.
+        Scheduled tasks appear on their chosen date.
+      </div>
+      <div class="sh-actions">
+        <button class="sh-btn sh-ghost" style="width:100%;" onclick="closeSheet('shSettings')">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-let SUPABASE_URL = '';
-let SUPABASE_KEY = '';
-let selectedCat  = '';
+const d = new Date(); const TODAY = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+let CFG = { url: '', key: '' };
+let S   = { tasks: [], templates: [], lastRollover: null };
+let UI  = { tab: 'today', optDaily: false, optSchedule: false, snoozeTaskId: null, filter: 'all', selectedCat: '', recurType: 'daily' };
+const expanded = new Set();
 
-// ── Init ──────────────────────────────────────
-function init() {
-  const cfg = localStorage.getItem('tf_submit_cfg');
-  if (cfg) {
-    try {
-      const { url, key } = JSON.parse(cfg);
-      SUPABASE_URL = url;
-      SUPABASE_KEY = key;
-      showForm();
-    } catch(e) {
-      showSetup();
-    }
-  } else {
-    showSetup();
-  }
+function loadConfig() {
+  const raw = localStorage.getItem('tf_cfg');
+  if (raw) { try { CFG = JSON.parse(raw); } catch(e) {} }
+  return !!(CFG.url && CFG.key);
 }
 
-function showSetup() {
-  document.getElementById('setupScreen').style.display = 'block';
-  document.getElementById('formState').style.display   = 'none';
-  document.getElementById('successState').style.display = 'none';
-}
-
-function showForm() {
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('formState').style.display   = 'block';
-  document.getElementById('successState').style.display = 'none';
-}
-
-// ── Setup ─────────────────────────────────────
-function saveSetup() {
-  const url = document.getElementById('setupUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('setupKey').value.trim();
-  const err = document.getElementById('setupError');
-
+function saveSupabaseConfig() {
+  const url = document.getElementById('obUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('obKey').value.trim();
+  const err = document.getElementById('obError');
   if (!url.startsWith('https://') || !key.startsWith('eyJ')) {
     err.textContent = 'Check your URL and key — they don\'t look right.';
-    err.style.display = 'block';
-    return;
+    err.style.display = 'block'; return;
   }
-
-  SUPABASE_URL = url;
-  SUPABASE_KEY = key;
-  localStorage.setItem('tf_submit_cfg', JSON.stringify({ url, key }));
+  CFG = { url, key };
+  localStorage.setItem('tf_cfg', JSON.stringify(CFG));
   err.style.display = 'none';
-  showForm();
+  startApp();
 }
 
-// ── Category ──────────────────────────────────
+function resetConfig() {
+  if (!confirm('Clear Supabase config? Tasks stay in the database.')) return;
+  localStorage.removeItem('tf_cfg');
+  CFG = { url:'', key:'' };
+  closeSheet('shSync');
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('onboard').classList.remove('hidden');
+}
+
+async function sbGet() {
+  const r = await fetch(`${CFG.url}/rest/v1/tasks?id=eq.main&select=data`, {
+    headers: { apikey: CFG.key, Authorization: `Bearer ${CFG.key}` }
+  });
+  if (!r.ok) throw new Error('Fetch failed: ' + r.status);
+  const arr = await r.json();
+  if (!arr.length) throw new Error('No data row found. Did you run the SQL setup?');
+  return arr[0].data;
+}
+
+async function sbSet(data) {
+  const r = await fetch(`${CFG.url}/rest/v1/tasks?id=eq.main`, {
+    method: 'PATCH',
+    headers: { apikey: CFG.key, Authorization: `Bearer ${CFG.key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ data, updated_at: new Date().toISOString() })
+  });
+  if (!r.ok) throw new Error('Save failed: ' + r.status);
+}
+
+let saveTimer = null;
+async function syncNow() {
+  setSyncStatus('pending', 'syncing…');
+  try {
+    const remote = await sbGet();
+    S.tasks = remote.tasks || [];
+    S.templates = remote.templates || [];
+    S.lastRollover = remote.lastRollover || null;
+    rollover();
+    await sbSet(exportData());
+    setSyncStatus('ok', 'synced');
+    render();
+  } catch(e) {
+    setSyncStatus('error', 'error');
+    document.getElementById('syncDetail').textContent = e.message;
+  }
+}
+
+async function autosave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    setSyncStatus('pending', 'saving…');
+    try { await sbSet(exportData()); setSyncStatus('ok', 'saved'); }
+    catch(e) { setSyncStatus('error', 'save failed'); }
+  }, 800);
+}
+
+function setSyncStatus(type, label) {
+  document.getElementById('syncDot').className = 'sync-dot' + (type==='ok'?' ok':type==='pending'?' pending':type==='error'?' error':'');
+  document.getElementById('syncLabel').textContent = label;
+  document.getElementById('syncDetail').textContent =
+    type==='ok' ? 'All changes saved to Supabase.' :
+    type==='error' ? 'Could not reach Supabase. Check connection.' : 'Working…';
+}
+
+function rollover() {
+  if (S.lastRollover === TODAY) return;
+
+  // 1. Roll over incomplete regular tasks to today
+  S.tasks = S.tasks.map(t => (!t.done && !t.isDaily && t.date < TODAY) ? {...t, date:TODAY, rolledOver:true} : t);
+
+  // 2. Roll over incomplete recurring tasks to today (don't delete them)
+  S.tasks = S.tasks.map(t => {
+    if (t.isDaily && !t.done && t.date < TODAY) {
+      return {...t, date:TODAY, rolledOver:true};
+    }
+    return t;
+  });
+
+  // 3. Remove completed recurring tasks from previous days (keep today's)
+  S.tasks = S.tasks.filter(t => !(t.isDaily && t.done && t.date < TODAY));
+
+  // 4. Inject fresh recurring tasks for today if not already present
+  const existingDaily = S.tasks.filter(t => t.isDaily && t.date === TODAY).map(t => t.title);
+  S.templates.forEach(tmpl => {
+    if (!existingDaily.includes(tmpl.title) && shouldShowToday(tmpl)) {
+      const t = makeTask(tmpl.title, true);
+      t.recurType = tmpl.recurType || 'daily';
+      S.tasks.push(t);
+    }
+  });
+
+  S.lastRollover = TODAY;
+}
+
+function makeTask(title, isDaily=false, date=TODAY) {
+  return { id: uid(), title, date, done:false, isDaily, rolledOver:false, snoozedTo:null, createdAt:new Date().toISOString() };
+}
+
+function addTask() {
+  const input = document.getElementById('addInput');
+  const title = input.value.trim();
+  if (!title) return;
+  let date = TODAY;
+  if (UI.optSchedule) date = document.getElementById('scheduleDateAdd').value || TODAY;
+  const task = makeTask(title, UI.optDaily, date);
+  if (UI.selectedCat) task.category = UI.selectedCat;
+  if (UI.optSchedule && date !== TODAY) task.snoozedTo = date;
+  if (UI.optDaily && !S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType, startDate: TODAY });
+  S.tasks.unshift(task);
+  input.value = '';
+  UI.selectedCat = '';
+  selectCat('');
+  autosave(); render();
+}
+
+function toggleDone(id) {
+  const t = S.tasks.find(x => x.id === id);
+  if (t) { t.done = !t.done; t.completedAt = t.done ? new Date().toISOString() : null; autosave(); render(); }
+}
+
+function deleteTask(id) {
+  S.tasks = S.tasks.filter(x => x.id !== id);
+  autosave(); render();
+}
+
+function openSnoozeSheet(id) {
+  UI.snoozeTaskId = id;
+  const tom = new Date(); tom.setDate(tom.getDate()+1);
+  document.getElementById('snoozeDate').value = tom.toISOString().split('T')[0];
+  openSheet('shSchedule');
+}
+
+function confirmSnooze() {
+  const date = document.getElementById('snoozeDate').value;
+  if (!date || !UI.snoozeTaskId) return;
+  const t = S.tasks.find(x => x.id === UI.snoozeTaskId);
+  if (t) { t.date = date; t.snoozedTo = date; t.done = false; t.rolledOver = false; }
+  autosave(); render(); closeSheet('shSchedule');
+}
+
+function addTemplate() {
+  const input = document.getElementById('tmplInput');
+  const title = input.value.trim();
+  if (!title) return;
+  if (!S.templates.find(t => t.title === title)) S.templates.push({ id:uid(), title, recurType: UI.recurType || 'daily', startDate: TODAY });
+  if (!S.tasks.find(t => t.title === title && t.isDaily && t.date === TODAY)) S.tasks.unshift(makeTask(title, true));
+  input.value = '';
+  autosave(); render(); renderTmplList();
+}
+
+function deleteTemplate(id) {
+  S.templates = S.templates.filter(t => t.id !== id);
+  autosave(); renderTmplList();
+}
+
+
+const CATS = {
+  work:     { label: '💼 Work',     cls: 'work' },
+  personal: { label: '👤 Personal', cls: 'personal' },
+  health:   { label: '💪 Health',   cls: 'health' },
+  home:     { label: '🏠 Home',     cls: 'home' },
+  learning: { label: '📚 Learning', cls: 'learning' },
+  finance:  { label: '💰 Finance',  cls: 'finance' },
+};
+
+
+function selectRecur(type) {
+  UI.recurType = type;
+  document.querySelectorAll('.recur-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('rchip-' + type).classList.add('active');
+}
+
+function shouldShowToday(template) {
+  const day = new Date().getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  if (template.recurType === 'weekdays') return day >= 1 && day <= 5;
+  if (template.recurType === 'weekends') return day === 0 || day === 6;
+
+  // Interval-based: 2weeks, 3weeks, monthly
+  if (['weekly','2weeks','3weeks','monthly'].includes(template.recurType)) {
+    const startDate = template.startDate || TODAY;
+    return isIntervalDue(startDate, template.recurType);
+  }
+
+  return true; // 'daily' or undefined
+}
+
+function isIntervalDue(startDate, recurType) {
+  const start = new Date(startDate + 'T00:00:00');
+  const today = new Date(TODAY + 'T00:00:00');
+
+  if (recurType === 'monthly') {
+    // Same day of month as start date
+    return today.getDate() === start.getDate();
+  }
+
+  // For 2weeks and 3weeks — check if today is exactly N weeks from start
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysDiff = Math.round((today - start) / msPerDay);
+  if (daysDiff < 0) return false;
+
+  const interval = recurType === 'weekly' ? 7 : recurType === '2weeks' ? 14 : 21;
+  return daysDiff % interval === 0;
+}
+
+function setFilter(cat) {
+  UI.filter = cat;
+  // Update chips
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.className = 'filter-chip';
+  });
+  const chip = document.getElementById('chip-' + cat);
+  if (chip) chip.classList.add('active-' + cat);
+  renderTaskList();
+}
+
 function selectCat(cat) {
-  selectedCat = cat;
-  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
-  document.getElementById('chip-' + cat).classList.add('sel-' + cat);
+  UI.selectedCat = cat;
+  document.querySelectorAll('.cat-chip').forEach(c => {
+    c.className = 'cat-chip';
+  });
+  if (cat) {
+    const chip = document.getElementById('cchip-' + cat);
+    if (chip) chip.classList.add('sel-' + cat);
+  } else {
+    const chip = document.getElementById('cchip-none');
+    if (chip) chip.classList.add('sel-none');
+  }
 }
 
-// ── Submit ────────────────────────────────────
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-
-function getToday() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function setTab(tab) {
+  UI.tab = tab;
+  ['today','upcoming','done'].forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
+  renderTaskList();
 }
 
-async function submitReminder() {
-  const name  = document.getElementById('senderName').value.trim();
-  const title = document.getElementById('taskTitle').value.trim();
-  const errEl = document.getElementById('errorMsg');
-  const btn   = document.getElementById('submitBtn');
+function toggleOpt(type) {
+  if (type === 'daily') {
+    UI.optDaily = !UI.optDaily; UI.optSchedule = false;
+    document.getElementById('btnDaily').classList.toggle('on-daily', UI.optDaily);
+    document.getElementById('btnSchedule').classList.remove('on-schedule');
+    document.getElementById('scheduleDateRow').classList.remove('show');
+  } else {
+    UI.optSchedule = !UI.optSchedule; UI.optDaily = false;
+    document.getElementById('btnSchedule').classList.toggle('on-schedule', UI.optSchedule);
+    document.getElementById('btnDaily').classList.remove('on-daily');
+    document.getElementById('scheduleDateRow').classList.toggle('show', UI.optSchedule);
+    document.getElementById('recurSelector').classList.remove('show');
+  }
+}
 
-  errEl.style.display = 'none';
-  if (!title) {
-    errEl.textContent = 'Please enter a reminder or task.';
-    errEl.style.display = 'block';
+function openSheet(id)  { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function openSettings() { renderTmplList(); openSheet('shSettings'); }
+
+document.querySelectorAll('.overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); })
+);
+
+function render() { renderTaskList(); }
+
+function renderTmplList() {
+  const el = document.getElementById('tmplList');
+  if (!S.templates.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0 4px;">No recurring tasks yet.</div>'; return; }
+  const recurLabel = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', weekly:'Weekly', '2weeks':'Every 2 weeks', '3weeks':'Every 3 weeks', monthly:'Every month' };
+  el.innerHTML = S.templates.map(t => `
+    <div class="tmpl-item">
+      <div class="tmpl-dot"></div>
+      <div class="tmpl-name">${esc(t.title)} <span style="font-size:9px;color:var(--text3);margin-left:4px;">${recurLabel[t.recurType||'daily']}</span></div>
+      <div class="tmpl-del" onclick="deleteTemplate('${t.id}')">×</div>
+    </div>`).join('');
+}
+
+function renderTaskList() {
+  const el = document.getElementById('taskList');
+  const tab = UI.tab;
+  let tasks;
+  const catFilter = t => UI.filter === 'all' || t.category === UI.filter;
+  if (tab === 'today')    tasks = S.tasks.filter(t => t.date <= TODAY && !t.done && catFilter(t));
+  else if (tab === 'upcoming') tasks = S.tasks.filter(t => t.date > TODAY && !t.done && catFilter(t)).sort((a,b) => a.date.localeCompare(b.date));
+  else tasks = S.tasks.filter(t => t.done && catFilter(t)).sort((a,b) => (b.completedAt||b.createdAt||'').localeCompare(a.completedAt||a.createdAt||''));
+
+  const doneCount = S.tasks.filter(t=>t.done).length;
+  document.getElementById('tab-done').innerHTML = 'Done' + (doneCount ? `<span class="tab-badge" style="background:var(--accent);">${doneCount}</span>` : '');
+
+  if (!tasks.length) {
+    const [icon, msg] = tab==='today' ? ['🌿','Nothing on the list.<br>Add a task below.'] : tab==='upcoming' ? ['📅','No upcoming tasks.<br>Schedule a task for a future date.'] : ['✓','Nothing completed yet.'];
+    el.innerHTML = `<div class="empty"><span class="empty-emoji">${icon}</span>${msg}</div>`;
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Sending…';
-
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/tasks?id=eq.main&select=data`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  let html = '';
+  if (tab === 'today') {
+    const daily   = tasks.filter(t =>  t.isDaily);
+    const regular = tasks.filter(t => !t.isDaily && !t.rolledOver);
+    const rolled  = tasks.filter(t => !t.isDaily &&  t.rolledOver);
+    if (rolled.length) html += `<div class="rollover-banner">↑ ${rolled.length} task${rolled.length>1?'s':''} carried forward from previous days</div>`;
+    if (daily.length)   { html += secHead('Recurring', daily.length);        html += daily.map(card).join(''); }
+    if (regular.length) { html += secHead('Today', regular.length);           html += regular.map(card).join(''); }
+    if (rolled.length)  { html += secHead('Carried Forward', rolled.length); html += rolled.map(card).join(''); }
+  } else {
+    // Group by completion date
+    const groups = {};
+    tasks.forEach(t => {
+      const dateKey = t.completedAt
+        ? t.completedAt.split('T')[0]
+        : t.createdAt
+        ? t.createdAt.split('T')[0]
+        : 'earlier';
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(t);
     });
-    if (!r.ok) throw new Error('Could not reach the server.');
-    const arr = await r.json();
-    if (!arr.length) throw new Error('No task data found.');
-
-    const data = arr[0].data;
-    data.tasks = data.tasks || [];
-
-    const label = name ? `📨 ${name}: ${title}` : `📨 ${title}`;
-    data.tasks.unshift({
-      id: uid(), title: label, date: getToday(),
-      done: false, isDaily: false, rolledOver: false,
-      snoozedTo: null, category: selectedCat || null,
-      fromOther: true, senderName: name || 'Someone',
-      createdAt: new Date().toISOString()
+    const sortedDates = Object.keys(groups).sort((a,b) => {
+      if (a === 'earlier') return 1;
+      if (b === 'earlier') return -1;
+      return b.localeCompare(a);
     });
-
-    const s = await fetch(`${SUPABASE_URL}/rest/v1/tasks?id=eq.main`, {
-      method: 'PATCH',
-      headers: {
-        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json', Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({ data, updated_at: new Date().toISOString() })
+    sortedDates.forEach(dateKey => {
+      const isToday = dateKey === TODAY;
+      const label = isToday ? 'Today' : dateKey === 'earlier' ? 'Earlier' : fmtDateLong(dateKey);
+      html += secHead(label, groups[dateKey].length);
+      html += groups[dateKey].map(card).join('');
     });
-    if (!s.ok) throw new Error('Failed to save. Please try again.');
+  }
+  el.innerHTML = html;
+}
 
-    document.getElementById('formState').style.display   = 'none';
-    document.getElementById('successState').style.display = 'block';
 
-  } catch(e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Send Reminder';
+function nextDueDate(tmpl) {
+  const startDate = tmpl.startDate || TODAY;
+  const start = new Date(startDate + 'T00:00:00');
+  const todayDate = new Date(TODAY + 'T00:00:00');
+  const msPerDay = 24 * 60 * 60 * 1000;
+
+  if (tmpl.recurType === 'daily') {
+    // Next occurrence is tomorrow
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'weekdays') {
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    while (next.getDay() === 0 || next.getDay() === 6) next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'weekends') {
+    const next = new Date(todayDate);
+    next.setDate(next.getDate() + 1);
+    while (next.getDay() !== 0 && next.getDay() !== 6) next.setDate(next.getDate() + 1);
+    return next.toISOString().split('T')[0];
+  }
+
+  if (tmpl.recurType === 'monthly') {
+    // Same day next month
+    const next = new Date(todayDate);
+    next.setMonth(next.getMonth() + 1);
+    next.setDate(start.getDate());
+    return next.toISOString().split('T')[0];
+  }
+
+  // weekly, 2weeks, 3weeks — find next interval from start
+  const interval = tmpl.recurType === 'weekly' ? 7 : tmpl.recurType === '2weeks' ? 14 : 21;
+  const daysSinceStart = Math.round((todayDate - start) / msPerDay);
+  const daysUntilNext = interval - (daysSinceStart % interval);
+  const next = new Date(todayDate);
+  next.setDate(next.getDate() + daysUntilNext);
+  return next.toISOString().split('T')[0];
+}
+
+function recurCard(tmpl) {
+  const nextDate = nextDueDate(tmpl);
+  const recurLabels = { daily:'Every day', weekdays:'Weekdays', weekends:'Weekends', weekly:'Weekly', '2weeks':'Every 2 wks', '3weeks':'Every 3 wks', monthly:'Monthly' };
+  const label = recurLabels[tmpl.recurType || 'daily'];
+  const catPill = tmpl.category && CATS[tmpl.category] ? `<span class="pill pill-${tmpl.category}">${CATS[tmpl.category].label}</span>` : '';
+  const daysUntil = Math.round((new Date(nextDate + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 86400000);
+  const dueLabel = daysUntil === 1 ? 'tomorrow' : daysUntil === 7 ? 'in 1 week' : `${fmtDate(nextDate)}`;
+
+  return `<div class="task-card is-daily" style="opacity:0.85;">
+    <div class="check" style="border-color:var(--daily); cursor:default;">
+      <span style="font-size:10px; color:var(--daily);">⟳</span>
+    </div>
+    <div class="task-body">
+      <div class="task-title">${esc(tmpl.title)}</div>
+      <div class="task-pills">
+        <span class="pill pill-daily">${label}</span>
+        <span class="pill pill-date">next: ${dueLabel}</span>
+        ${catPill}
+      </div>
+    </div>
+  </div>`;
+}
+
+function secHead(label, count) {
+  return `<div class="section-head"><span class="section-label">${label}</span><span class="section-count">${count}</span><div class="section-line"></div></div>`;
+}
+
+function card(t) {
+  const isExp = expanded.has(t.id);
+  const pills = [];
+  if (t.isDaily) {
+    const rl = { daily:'⟳ Every day', weekdays:'⟳ Weekdays', weekends:'⟳ Weekends', weekly:'⟳ Weekly', '2weeks':'⟳ Every 2 wks', '3weeks':'⟳ Every 3 wks', monthly:'⟳ Monthly' };
+    pills.push(`<span class="pill pill-daily">${rl[t.recurType||'daily']}</span>`);
+  }
+  if (t.rolledOver) pills.push('<span class="pill pill-rolled">↑ carried</span>');
+  if (t.snoozedTo)  pills.push(`<span class="pill pill-snoozed">📅 ${fmtDate(t.snoozedTo)}</span>`);
+  if (UI.tab !== 'today' && t.date) pills.push(`<span class="pill pill-date">${fmtDate(t.date)}</span>`);
+  if (t.category && CATS[t.category]) pills.push(`<span class="pill pill-${t.category}">${CATS[t.category].label}</span>`);
+  if (t.done && t.completedAt) pills.push(`<span class="pill pill-date">✓ ${fmtDate(t.completedAt.split('T')[0])}</span>`);
+
+  const actions = isExp ? `<div class="task-actions" onclick="event.stopPropagation()">
+    ${t.done ? `<button class="act-btn restore" onclick="toggleDone('${t.id}')">↩ Restore</button>` : ''}
+    ${!t.done ? `<button class="act-btn" onclick="openEditSheet('${t.id}')">✏ Edit</button>` : ''}
+    ${!t.done && !t.isDaily ? `<button class="act-btn schedule-btn" onclick="openSnoozeSheet('${t.id}')">📅 Schedule</button>` : ''}
+    <button class="act-btn danger" onclick="deleteTask('${t.id}')">Delete</button>
+  </div>` : '';
+
+  return `<div class="task-card${t.done?' done':''}${t.isDaily?' is-daily':''}${t.rolledOver&&!t.isDaily?' is-rolled':''}" onclick="toggleExpand('${t.id}')">
+    <div class="check" onclick="event.stopPropagation();toggleDone('${t.id}')">
+      <svg class="check-svg" width="11" height="9" viewBox="0 0 11 9" fill="none">
+        <path d="M1 4.5l3 3L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="task-body">
+      <div class="task-title">${esc(t.title)}</div>
+      ${pills.length ? `<div class="task-pills">${pills.join('')}</div>` : ''}
+      ${actions}
+    </div>
+  </div>`;
+}
+
+function toggleExpand(id) {
+  expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+  renderTaskList();
+}
+
+function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDateLong(d) {
+  if (!d) return '';
+  const date = new Date(d + 'T12:00:00');
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dayNames[date.getDay()] + ', ' + months[date.getMonth()] + ' ' + date.getDate();
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const [,m,day] = d.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+ +day;
+}
+function exportData() { return { tasks:S.tasks, templates:S.templates, lastRollover:S.lastRollover }; }
+
+async function startApp() {
+  document.getElementById('onboard').classList.add('hidden');
+  document.getElementById('mainApp').style.display = 'flex';
+  document.getElementById('todayLabel').textContent = new Date(TODAY+'T12:00:00').toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const tom = new Date(); tom.setDate(tom.getDate()+1);
+  document.getElementById('scheduleDateAdd').value = tom.toISOString().split('T')[0];
+  document.getElementById('addInput').addEventListener('keydown', e => { if(e.key==='Enter') addTask(); });
+  document.getElementById('tmplInput').addEventListener('keydown', e => { if(e.key==='Enter') addTemplate(); });
+  await syncNow();
+}
+
+
+// ─── EDIT ──────────────────────────────────
+let editTaskId = null;
+let editCat = '';
+let editRecur = 'daily';
+
+function openEditSheet(id) {
+  const t = S.tasks.find(x => x.id === id);
+  if (!t) return;
+  editTaskId = id;
+  editCat = t.category || '';
+  editRecur = t.recurType || 'daily';
+
+  document.getElementById('editTitle').value = t.title;
+  document.getElementById('editDate').value = t.date || TODAY;
+
+  // Category chips
+  document.querySelectorAll('[id^="echip-"]').forEach(c => {
+    c.className = 'cat-chip';
+  });
+  const catKey = editCat || 'none';
+  const ec = document.getElementById('echip-' + catKey);
+  if (ec) ec.classList.add('sel-' + (editCat || 'none'));
+
+  // Recur toggle
+  if (t.isDaily) {
+    editToggleRecur(true, false); // show recur options, no save
+    document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+    const rc = document.getElementById('erchip-' + editRecur);
+    if (rc) rc.classList.add('active');
+  } else {
+    editToggleRecur(false, false); // hide recur options, no save
+  }
+
+  openSheet('shEdit');
+}
+
+function editSelectCat(cat) {
+  editCat = cat;
+  document.querySelectorAll('[id^="echip-"]').forEach(c => c.className = 'cat-chip');
+  const key = cat || 'none';
+  const chip = document.getElementById('echip-' + key);
+  if (chip) chip.classList.add('sel-' + key);
+}
+
+function editToggleRecur(makeRecur, updateChip = true) {
+  const onChip  = document.getElementById('editRecurOn');
+  const offChip = document.getElementById('editRecurOff');
+  const row     = document.getElementById('editRecurRow');
+
+  if (makeRecur) {
+    row.style.display = 'block';
+    if (updateChip) {
+      onChip.classList.add('active');
+      offChip.classList.remove('active');
+      // Default to daily if no recur type set
+      if (!editRecur) editRecur = 'daily';
+      document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+      const rc = document.getElementById('erchip-' + editRecur);
+      if (rc) rc.classList.add('active');
+    }
+  } else {
+    row.style.display = 'none';
+    if (updateChip) {
+      offChip.classList.add('active');
+      onChip.classList.remove('active');
+    }
   }
 }
 
-function resetForm() {
-  document.getElementById('senderName').value = '';
-  document.getElementById('taskTitle').value  = '';
-  document.getElementById('errorMsg').style.display = 'none';
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = 'Send Reminder';
-  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
-  selectedCat = '';
-  showForm();
+function editSelectRecur(type) {
+  editRecur = type;
+  document.querySelectorAll('[id^="erchip-"]').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById('erchip-' + type);
+  if (chip) chip.classList.add('active');
+
+  // Also update template if this task is a daily template
+  const t = S.tasks.find(x => x.id === editTaskId);
+  if (t && t.isDaily) {
+    const tmpl = S.templates.find(x => x.title === t.title);
+    if (tmpl) tmpl.recurType = type;
+  }
 }
 
-// Enter key on setup
-document.getElementById('setupKey').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveSetup();
+function confirmEdit() {
+  const t = S.tasks.find(x => x.id === editTaskId);
+  if (!t) return;
+
+  const newTitle = document.getElementById('editTitle').value.trim();
+  if (!newTitle) return;
+
+  const isNowRecurring = document.getElementById('editRecurRow').style.display !== 'none';
+
+  if (isNowRecurring && !t.isDaily) {
+    // Converting regular task TO recurring
+    t.isDaily = true;
+    t.recurType = editRecur;
+    t.rolledOver = false;
+    // Add to templates if not already there
+    if (!S.templates.find(x => x.title === newTitle)) {
+      S.templates.push({ id: uid(), title: newTitle, recurType: editRecur, startDate: TODAY });
+    }
+  } else if (!isNowRecurring && t.isDaily) {
+    // Converting recurring TO regular
+    t.isDaily = false;
+    t.recurType = null;
+    // Remove from templates
+    S.templates = S.templates.filter(x => x.title !== t.title);
+  } else if (t.isDaily) {
+    // Updating existing recurring task
+    const tmpl = S.templates.find(x => x.title === t.title);
+    if (tmpl) { tmpl.title = newTitle; tmpl.recurType = editRecur; }
+    t.recurType = editRecur;
+  }
+
+  t.title = newTitle;
+  t.category = editCat;
+  t.date = document.getElementById('editDate').value || TODAY;
+
+  autosave(); render();
+  closeSheet('shEdit');
+}
+
+function init() { if (loadConfig()) startApp(); }
+
+// Auto-sync when user returns to the app (switches tabs, reopens from home screen)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && CFG.url && CFG.key) {
+    // Check if date has changed since last render
+    const d = new Date();
+    const currentDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (currentDate !== TODAY) {
+      // Date changed — full page reload to reset TODAY constant
+      location.reload();
+    } else {
+      syncNow();
+    }
+  }
+});
+
+// Also sync when app first becomes visible after being in background on iOS
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && CFG.url && CFG.key) {
+    syncNow();
+  }
 });
 
 init();
 </script>
+
+<!-- Edit Task Sheet -->
+<div class="overlay" id="shEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Edit task</div>
+
+      <label class="field-label">Task title</label>
+      <input class="field-input" id="editTitle" autocorrect="off" />
+
+      <label class="field-label">Category</label>
+      <div class="cat-selector" style="margin-top:4px;">
+        <div class="cat-chip" id="echip-none"     onclick="editSelectCat('')">—</div>
+        <div class="cat-chip" id="echip-work"     onclick="editSelectCat('work')">💼 Work</div>
+        <div class="cat-chip" id="echip-personal" onclick="editSelectCat('personal')">👤 Personal</div>
+        <div class="cat-chip" id="echip-health"   onclick="editSelectCat('health')">💪 Health</div>
+        <div class="cat-chip" id="echip-home"     onclick="editSelectCat('home')">🏠 Home</div>
+        <div class="cat-chip" id="echip-learning" onclick="editSelectCat('learning')">📚 Learning</div>
+        <div class="cat-chip" id="echip-finance"  onclick="editSelectCat('finance')">💰 Finance</div>
+      </div>
+
+      <label class="field-label">Schedule date</label>
+      <input type="date" class="field-input" id="editDate" />
+
+      <label class="field-label">Recurring</label>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <div class="recur-chip" id="editRecurOff" onclick="editToggleRecur(false)">✕ Not recurring</div>
+        <div class="recur-chip" id="editRecurOn"  onclick="editToggleRecur(true)">⟳ Make recurring</div>
+      </div>
+      <div id="editRecurRow" style="display:none;">
+        <div class="recur-selector show">
+          <div class="recur-chip" id="erchip-daily"    onclick="editSelectRecur('daily')">Every day</div>
+          <div class="recur-chip" id="erchip-weekdays" onclick="editSelectRecur('weekdays')">Weekdays</div>
+          <div class="recur-chip" id="erchip-weekends" onclick="editSelectRecur('weekends')">Weekends</div>
+          <div class="recur-chip" id="erchip-weekly"   onclick="editSelectRecur('weekly')">Weekly</div>
+          <div class="recur-chip" id="erchip-2weeks"   onclick="editSelectRecur('2weeks')">Every 2 wks</div>
+          <div class="recur-chip" id="erchip-3weeks"   onclick="editSelectRecur('3weeks')">Every 3 wks</div>
+          <div class="recur-chip" id="erchip-monthly"  onclick="editSelectRecur('monthly')">Every month</div>
+        </div>
+      </div>
+
+      <div class="sh-actions">
+        <button class="sh-btn sh-ghost"   onclick="closeSheet('shEdit')">Cancel</button>
+        <button class="sh-btn sh-primary" onclick="confirmEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

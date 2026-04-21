@@ -676,16 +676,55 @@ function setSyncStatus(type, label) {
 
 function rollover() {
   if (S.lastRollover === TODAY) return;
-  S.tasks = S.tasks.map(t => (!t.done && !t.isDaily && t.date < TODAY) ? {...t, date:TODAY, rolledOver:true} : t);
-  S.tasks = S.tasks.filter(t => !(t.isDaily && t.date < TODAY));
-  const existingDaily = S.tasks.filter(t => t.isDaily && t.date === TODAY).map(t => t.title);
+
+  const intervalTypes = ['weekly','2weeks','3weeks','monthly'];
+
+  // 1. Roll over incomplete regular tasks to today
+  S.tasks = S.tasks.map(t => (!t.done && !t.isDaily && t.date < TODAY)
+    ? {...t, date:TODAY, rolledOver:true} : t);
+
+  // 2. Handle recurring tasks from previous days
+  S.tasks = S.tasks.map(t => {
+    if (!t.isDaily || t.date >= TODAY) return t;
+
+    const tmpl = S.templates.find(x => x.title === t.title);
+    const recurType = t.recurType || (tmpl && tmpl.recurType) || 'daily';
+    const isInterval = intervalTypes.includes(recurType);
+
+    if (t.done) {
+      // Completed interval tasks: keep so we don't lose history, mark as done+old
+      // Completed daily/weekday/weekend: remove, will regenerate if due today
+      return isInterval ? null : null; // remove all completed old recurring
+    } else {
+      // Incomplete: always roll over to today so user can complete it
+      return {...t, date:TODAY, rolledOver:true};
+    }
+  }).filter(Boolean);
+
+  // 3. Remove completed recurring from previous days (already handled above)
+  S.tasks = S.tasks.filter(t => !(t.isDaily && t.done && t.date < TODAY));
+
+  // 4. Inject fresh recurring tasks for today
+  // For interval types: inject if due today AND no incomplete instance exists
+  // For daily/weekday/weekend: inject if due today AND no instance exists at all
   S.templates.forEach(tmpl => {
-    if (!existingDaily.includes(tmpl.title) && shouldShowToday(tmpl)) {
+    const recurType = tmpl.recurType || 'daily';
+    const isInterval = intervalTypes.includes(recurType);
+    const isDueToday = shouldShowToday(tmpl);
+
+    if (!isDueToday) return;
+
+    const existingIncomplete = S.tasks.find(t =>
+      t.isDaily && t.title === tmpl.title && t.date === TODAY && !t.done
+    );
+
+    if (!existingIncomplete) {
       const t = makeTask(tmpl.title, true);
-      t.recurType = tmpl.recurType || 'daily';
+      t.recurType = recurType;
       S.tasks.push(t);
     }
   });
+
   S.lastRollover = TODAY;
 }
 
